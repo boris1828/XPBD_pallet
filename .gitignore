@@ -1,0 +1,5 @@
+/build/
+/python/
+/video_frame/
+avbd.cpp
+worlds.cpp

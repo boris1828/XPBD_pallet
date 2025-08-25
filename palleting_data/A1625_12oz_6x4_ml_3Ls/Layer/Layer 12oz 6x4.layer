@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LayerClass xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <OverHangX>0</OverHangX>
+  <OverHangY>0</OverHangY>
+  <Header>Layer</Header>
+  <Name>Layer 12oz 6x4</Name>
+  <ID>1608</ID>
+  <Description>layer 12oz 6x4</Description>
+  <FilePath>Layer 12oz 6x4.layer</FilePath>
+  <SecondaryPackaging>Secondary Packaging 12oz 6x4.secondarypackaging</SecondaryPackaging>
+  <Pallet>Pallet.pallet</Pallet>
+  <TotalWeight>966400</TotalWeight>
+  <PalletAreaUsed>87.12</PalletAreaUsed>
+  <Packs>10</Packs>
+  <LayerOverSide_X>0</LayerOverSide_X>
+  <LayerOverSide_Y>0</LayerOverSide_Y>
+  <SPDisposal>
+    <PalSchema_SPDisposalClass>
+      <_x>38</_x>
+      <_y>6</_y>
+      <_rotation>false</_rotation>
+    </PalSchema_SPDisposalClass>
+    <PalSchema_SPDisposalClass>
+      <_x>38</_x>
+      <_y>270</_y>
+      <_rotation>false</_rotation>
+    </PalSchema_SPDisposalClass>
+    <PalSchema_SPDisposalClass>
+      <_x>38</_x>
+      <_y>534</_y>
+      <_rotation>false</_rotation>
+    </PalSchema_SPDisposalClass>
+    <PalSchema_SPDisposalClass>
+      <_x>698</_x>
+      <_y>6</_y>
+      <_rotation>true</_rotation>
+    </PalSchema_SPDisposalClass>
+    <PalSchema_SPDisposalClass>
+      <_x>434</_x>
+      <_y>6</_y>
+      <_rotation>true</_rotation>
+    </PalSchema_SPDisposalClass>
+    <PalSchema_SPDisposalClass>
+      <_x>38</_x>
+      <_y>798</_y>
+      <_rotation>true</_rotation>
+    </PalSchema_SPDisposalClass>
+    <PalSchema_SPDisposalClass>
+      <_x>302</_x>
+      <_y>798</_y>
+      <_rotation>true</_rotation>
+    </PalSchema_SPDisposalClass>
+    <PalSchema_SPDisposalClass>
+      <_x>566</_x>
+      <_y>930</_y>
+      <_rotation>false</_rotation>
+    </PalSchema_SPDisposalClass>
+    <PalSchema_SPDisposalClass>
+      <_x>566</_x>
+      <_y>666</_y>
+      <_rotation>false</_rotation>
+    </PalSchema_SPDisposalClass>
+    <PalSchema_SPDisposalClass>
+      <_x>566</_x>
+      <_y>402</_y>
+      <_rotation>false</_rotation>
+    </PalSchema_SPDisposalClass>
+  </SPDisposal>
+  <Type>1</Type>
+  <Overspeed>0</Overspeed>
+  <Speed>0</Speed>
+  <Checked>true</Checked>
+</LayerClass>

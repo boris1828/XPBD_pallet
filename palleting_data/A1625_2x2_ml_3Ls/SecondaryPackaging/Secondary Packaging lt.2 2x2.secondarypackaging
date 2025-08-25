@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SecondaryPackagingClass xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Header>SecondaryPackaging</Header>
+  <Name>Secondary Packaging lt.2 2x2</Name>
+  <ID>202</ID>
+  <PrimaryPackaging>Primary Packaging.primarypackaging</PrimaryPackaging>
+  <Description>Lt.2</Description>
+  <Type>2</Type>
+  <NumberOfItems_X>2</NumberOfItems_X>
+  <NumberOfItems_Y>2</NumberOfItems_Y>
+  <NumberOfItems_Z>1</NumberOfItems_Z>
+  <Weight>8000</Weight>
+  <Length>208</Length>
+  <Width>208</Width>
+  <Height>339</Height>
+  <Overspeed>0</Overspeed>
+  <Speed>0</Speed>
+  <Checked>true</Checked>
+</SecondaryPackagingClass>
