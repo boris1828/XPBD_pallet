@@ -59,7 +59,7 @@ cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmak
 cmake --build .
 ```
 
-la parte C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake è un segnaposto.
+la parte `C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake` è un segnaposto.
 
 Ogni utente deve sostituirlo con il percorso reale della propria installazione di vcpkg sul proprio PC.
 
