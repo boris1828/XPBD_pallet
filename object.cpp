@@ -15,6 +15,7 @@ struct TetraObject {
 
     TetraMesh mesh;
     std::vector<Tetrahedron> tetras;
+
     std::vector<Edge>        edges;
     std::vector<Real3>       positions;
     std::vector<Real3>       old_positions;
@@ -93,6 +94,7 @@ struct TetraObject {
             vertex_tetras[t.vs[1]].push_back(tetra_idx);
             vertex_tetras[t.vs[2]].push_back(tetra_idx);
             vertex_tetras[t.vs[3]].push_back(tetra_idx);
+            t.setObject(this);
             tetra_idx++;
         }
 
@@ -146,6 +148,9 @@ struct TetraObject {
         }
 
         aabb = AABB(min, max);
+
+        for (auto& t : tetras) t.update_bounding_sphere();
+
     }
 
     void draw() {
@@ -171,6 +176,13 @@ struct TetraObject {
     }
 
 };
+
+std::array<Real3, 4> get_tetra_points(TetraObject* obj, VertexIndex vs[4]) {
+    return {obj->positions[vs[0]],
+            obj->positions[vs[1]],
+            obj->positions[vs[2]],
+            obj->positions[vs[3]]};
+}
 
 TetraObject create_box(Real3 starting_corner, Real width, Real height, Real depth) {
 
@@ -245,7 +257,7 @@ TetraObject create_cube(Real3 center, float size) {
     std::vector<Tetrahedron> tetras;
 
     float hsize = size / 2.0;
-    
+
     Real3 C(center);
     Real3 A1(C.x - hsize, C.y + hsize, C.z - hsize);
     Real3 A2(C.x - hsize, C.y + hsize, C.z + hsize);

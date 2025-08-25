@@ -1,8 +1,13 @@
 #pragma once
 
+#include <array>
+#include <algorithm>
+
 #include "types.cpp"
 
 struct TetraObject;
+
+std::array<Real3, 4> get_tetra_points(TetraObject* obj, VertexIndex vs[4]);
 
 struct Constraint {
     Real compliance;
@@ -22,9 +27,9 @@ struct InternalConstraint : Constraint {
 
     InternalConstraint(
         Real compliance, 
-        TetraObject *obj) 
+        TetraObject *o) 
         : Constraint(compliance), 
-          obj(obj) {}
+          obj(o) {}
 
     void setObject(TetraObject* o) { obj = o; }
 };
@@ -39,7 +44,9 @@ struct GlobalConstraint : Constraint {
 
 struct Tetrahedron : InternalConstraint {
     VertexIndex vs[4];
-    Real rest_volume;
+    Real        rest_volume;
+    Real3       center;
+    Real        radius;
 
     Tetrahedron(
         Real compliance,
@@ -57,7 +64,31 @@ struct Tetrahedron : InternalConstraint {
         vs[2] = v3;
         vs[3] = v4;
     }
+
+    void update_bounding_sphere() {
+        std::array<Real3, 4> positions = get_tetra_points(obj, vs);
+        Real3 p1 = positions[0];
+        Real3 p2 = positions[1];
+        Real3 p3 = positions[2];
+        Real3 p4 = positions[3];
+        center = (p1 + p2 + p3 + p4) / 4.0;
+        radius = glm::length(p1 - center);
+        radius = std::max(radius, glm::length(p2 - center));
+        radius = std::max(radius, glm::length(p3 - center));
+        radius = std::max(radius, glm::length(p4 - center));        
+    }
 };
+
+bool bounding_sphere_intersect(const Tetrahedron& t1, const Tetrahedron& t2) {
+    Real3 diff = { t1.center.x - t2.center.x,
+                   t1.center.y - t2.center.y,
+                   t1.center.z - t2.center.z };
+
+    Real distSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
+    Real rSum   = t1.radius + t2.radius;
+
+    return distSq <= rSum * rSum;
+}
 
 struct Edge : InternalConstraint {
     VertexIndex v1, v2; 

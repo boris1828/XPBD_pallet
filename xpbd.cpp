@@ -54,6 +54,8 @@ void XPBD_collect_collisions(
                     Tetrahedron &t1 = objects[o1i].tetras[t1i];
                     Tetrahedron &t2 = objects[o2i].tetras[t2i];
 
+                    if (!bounding_sphere_intersect(t1, t2)) continue;
+
                     CollisionInfo info = SAT_tet_tet(
                                                 objects[o1i], t1, 
                                                 objects[o2i], t2);

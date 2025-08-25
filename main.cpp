@@ -38,11 +38,12 @@ extern Real delta_t;
 unsigned int WIDTH  = 1600;
 unsigned int HEIGHT = 800;
 
-bool DO_VIDEO = false;
+bool DO_VIDEO = true;
 
 const double targetFPS = 60.0;
 const std::chrono::duration<double, std::milli> targetFrameDuration(1000.0 / targetFPS);
 std::chrono::steady_clock::time_point frameStart;
+std::chrono::steady_clock::time_point simulationStart;
 
 GLFWwindow* window         = nullptr;
 unsigned int objectProgram = 0;
@@ -384,11 +385,13 @@ void world_schema() {
     std::cout << "Loaded " << scene.constraints.size() << " constraints.\n";
     std::cout << "Loaded " << positions.size()         << " fixed vertices.\n";
 
+    simulationStart = std::chrono::high_resolution_clock::now();
+
     while (!glfwWindowShouldClose(window)) {
 
         time = step * delta_t;
 
-        Real3 velocity(1.0, 0.0, 0.0);
+        Real3 velocity(0.5, 0.0, 0.0);
         if (time < 2.0) velocity *= time / 2.0;
 
         for (const auto& [key, init_pos] : positions) {
@@ -410,7 +413,14 @@ void world_schema() {
         } 
         else rendering(); 
 
-        std::cout << time << "\n";
+        auto now        = std::chrono::high_resolution_clock::now();
+        auto elapsed    = now - simulationStart;
+        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - simulationStart).count();
+        double avg_time = static_cast<double>(elapsed_ms) / (step + 1);
+
+        std::cout << avg_time <<  "\n";
+        std::cout << time     <<  "\n\n";
+
 
         loop_terminate();
 
