@@ -95,6 +95,11 @@ struct TetraObject {
             vertex_tetras[t.vs[2]].push_back(tetra_idx);
             vertex_tetras[t.vs[3]].push_back(tetra_idx);
             t.setObject(this);
+            t.rest_volume = tetra_volume(
+                                    positions[t.vs[0]], 
+                                    positions[t.vs[1]], 
+                                    positions[t.vs[2]], 
+                                    positions[t.vs[3]]);
             tetra_idx++;
         }
 
@@ -201,6 +206,7 @@ TetraObject create_box(Real3 starting_corner, Real width, Real height, Real dept
     Real3 A2(C.x - hwidth, C.y + hheight, C.z + hdepth);
     Real3 A3(C.x + hwidth, C.y + hheight, C.z + hdepth);
     Real3 A4(C.x + hwidth, C.y + hheight, C.z - hdepth);
+
     Real3 B1(C.x - hwidth, C.y - hheight, C.z - hdepth);
     Real3 B2(C.x - hwidth, C.y - hheight, C.z + hdepth);
     Real3 B3(C.x + hwidth, C.y - hheight, C.z + hdepth);
@@ -216,33 +222,59 @@ TetraObject create_box(Real3 starting_corner, Real width, Real height, Real dept
     ps.push_back(B4); // 7
     ps.push_back(C);  // 8
 
-    TetraObject obj(ps);
-    Real volume;
 
-    volume = tetra_volume(ps[1], ps[0], ps[2], ps[8]);
-    tetras.push_back({0.0, nullptr, 1, 0, 2, 8, volume});
-    volume = tetra_volume(ps[2], ps[0], ps[3], ps[8]);
-    tetras.push_back({0.0, nullptr, 2, 0, 3, 8, volume});
-    volume = tetra_volume(ps[4], ps[5], ps[7], ps[8]);
-    tetras.push_back({0.0, nullptr, 4, 5, 7, 8, volume});
-    volume = tetra_volume(ps[7], ps[5], ps[6], ps[8]);
-    tetras.push_back({0.0, nullptr, 7, 5, 6, 8, volume});
-    volume = tetra_volume(ps[7], ps[6], ps[3], ps[8]);
-    tetras.push_back({0.0, nullptr, 7, 6, 3, 8, volume});
-    volume = tetra_volume(ps[3], ps[6], ps[2], ps[8]);
-    tetras.push_back({0.0, nullptr, 3, 6, 2, 8, volume});
-    volume = tetra_volume(ps[1], ps[4], ps[0], ps[8]);
-    tetras.push_back({0.0, nullptr, 1, 4, 0, 8, volume});
-    volume = tetra_volume(ps[5], ps[4], ps[1], ps[8]);
-    tetras.push_back({0.0, nullptr, 5, 4, 1, 8, volume});
-    volume = tetra_volume(ps[3], ps[4], ps[7], ps[8]);
-    tetras.push_back({0.0, nullptr, 3, 4, 7, 8, volume});
-    volume = tetra_volume(ps[0], ps[4], ps[3], ps[8]);
-    tetras.push_back({0.0, nullptr, 0, 4, 3, 8, volume});
-    volume = tetra_volume(ps[1], ps[6], ps[5], ps[8]);
-    tetras.push_back({0.0, nullptr, 1, 6, 5, 8, volume});
-    volume = tetra_volume(ps[2], ps[6], ps[1], ps[8]);
-    tetras.push_back({0.0, nullptr, 2, 6, 1, 8, volume});
+    Real3 Ct = C + Real3(0.0,  hheight, 0.0);
+    Real3 Cd = C + Real3(0.0, -hheight, 0.0);
+
+    Real3 Cl = C + Real3(-hwidth, 0.0, 0.0);
+    Real3 Cr = C + Real3(+hwidth, 0.0, 0.0);
+    
+    Real3 Cf = C + Real3(0.0, 0.0, +hdepth);
+    Real3 Cb = C + Real3(0.0, 0.0, -hdepth);
+
+    ps.push_back(Ct); // 9
+    ps.push_back(Cd); // 10
+    ps.push_back(Cl); // 11
+    ps.push_back(Cr); // 12
+    ps.push_back(Cf); // 13
+    ps.push_back(Cb); // 14
+
+
+    TetraObject obj(ps);
+    Real volume = 0.0;
+
+    // tetras.push_back({0.0, nullptr, 1, 0, 2, 8, volume});
+    // tetras.push_back({0.0, nullptr, 2, 0, 3, 8, volume});
+    // tetras.push_back({0.0, nullptr, 4, 5, 7, 8, volume});
+    // tetras.push_back({0.0, nullptr, 7, 5, 6, 8, volume});
+    // tetras.push_back({0.0, nullptr, 7, 6, 3, 8, volume});
+    // tetras.push_back({0.0, nullptr, 3, 6, 2, 8, volume});
+    // tetras.push_back({0.0, nullptr, 1, 4, 0, 8, volume});
+    // tetras.push_back({0.0, nullptr, 5, 4, 1, 8, volume});
+    // tetras.push_back({0.0, nullptr, 3, 4, 7, 8, volume});
+    // tetras.push_back({0.0, nullptr, 0, 4, 3, 8, volume});
+    // tetras.push_back({0.0, nullptr, 1, 6, 5, 8, volume});
+    // tetras.push_back({0.0, nullptr, 2, 6, 1, 8, volume});
+
+    auto addFaceTetras = [&](
+            VertexIndex v0, 
+            VertexIndex v1, 
+            VertexIndex v2, 
+            VertexIndex v3,
+            VertexIndex face_center, 
+            VertexIndex center) {
+        tetras.push_back({0.0, nullptr, v0, v1, face_center, center, volume});
+        tetras.push_back({0.0, nullptr, v0, v3, face_center, center, volume});
+        tetras.push_back({0.0, nullptr, v2, v1, face_center, center, volume});
+        tetras.push_back({0.0, nullptr, v2, v3, face_center, center, volume});
+    };
+
+    addFaceTetras(0, 1, 2, 3,  9, 8); 
+    addFaceTetras(4, 5, 6, 7, 10, 8); 
+    addFaceTetras(0, 1, 5, 4, 11, 8);
+    addFaceTetras(3, 2, 6, 7, 12, 8); 
+    addFaceTetras(1, 2, 6, 5, 13, 8); 
+    addFaceTetras(0, 3, 7, 4, 14, 8); 
 
     obj.init_tetras_and_edges(tetras);
 

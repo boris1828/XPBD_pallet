@@ -38,7 +38,7 @@ extern Real delta_t;
 unsigned int WIDTH  = 1600;
 unsigned int HEIGHT = 800;
 
-bool DO_VIDEO = true;
+bool DO_VIDEO       = true;
 
 const double targetFPS = 60.0;
 const std::chrono::duration<double, std::milli> targetFrameDuration(1000.0 / targetFPS);
@@ -104,6 +104,7 @@ bool graphics_init() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     ground.init();
+    ground.initGrid();
 
     return init_shaders(objectProgram, groundProgram);
 }
@@ -143,10 +144,10 @@ void loop_terminate() {
 glm::mat4 get_MVP(Real3 center = Real3(0.0)) {
     
     glm::mat4 model = glm::mat4(1.0f);
-    model           = glm::rotate(model, glm::radians(0.0f) /*((float)glfwGetTime())*/, glm::vec3(0.3f, 1.0f, 0.0f));
+    model           = glm::rotate(model, glm::radians(0.0f), /*((float)glfwGetTime()),*/ glm::vec3(0.3f, 1.0f, 0.0f));
 
     glm::mat4 view = glm::lookAt(
-        glm::vec3(center.x, center.y, 2.0), // posizione camera
+        glm::vec3(center.x, center.y, 2.0),      // posizione camera
         glm::vec3(center.x, center.y, center.z), // guarda al centro
         glm::vec3(0.0f, 1.0f, 0.0f)              // up
     );
@@ -181,6 +182,7 @@ void rendering() {
 
     set_shader(groundProgram, MVP);
     ground.draw();
+    ground.drawGrid();
 
 }
 
@@ -318,9 +320,10 @@ void wrap() {
             TetraObject &obj2 = scene.objects[o2i];
             for (VertexIndex vi1 = 0; vi1 < obj1.num_vertices(); vi1++) {
                 for (VertexIndex vi2 = 0; vi2 < obj2.num_vertices(); vi2++) {
-                    if (glm::length(obj1.positions[vi1] - obj2.positions[vi2]) < 1e-5) {
+                    Real distance = glm::length(obj1.positions[vi1] - obj2.positions[vi2]);
+                    if (distance < .3) {
                         if (is_on_aabb_face(obj1.positions[vi1])) {
-                            attach_vertices(scene, o1i, o2i, vi1, vi2, 0.0);
+                            attach_vertices(scene, o1i, o2i, vi1, vi2, distance);
                         }
                     }
                 }
@@ -391,7 +394,7 @@ void world_schema() {
 
         time = step * delta_t;
 
-        Real3 velocity(0.5, 0.0, 0.0);
+        Real3 velocity(1.0, 0.0, 0.0);
         if (time < 2.0) velocity *= time / 2.0;
 
         for (const auto& [key, init_pos] : positions) {
@@ -427,6 +430,33 @@ void world_schema() {
         step++;
     }
 }
+
+void world() {
+    
+    XPBD_init();
+
+    uint64_t step = 0;
+    Real time     = 0.0;
+
+    scene.addObject(create_box(Real3(0.0, -2.0, -2.0), 1.0, 1.0, 1.0));
+    scene.addObject(create_box(Real3(0.9, -1.0, -2.0), 1.0, 1.0, 1.0));
+
+    while (!glfwWindowShouldClose(window)) {
+
+        time = step * delta_t;
+
+        loop_init();
+
+        XPBD_step(scene);
+
+        rendering(); 
+
+        loop_terminate();
+
+        step++;
+    }
+}
+
 
 int main() {
 
