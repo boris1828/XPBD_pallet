@@ -27,6 +27,7 @@ namespace fs = std::filesystem;
 #include "ground.cpp"
 #include "XMLparser.cpp"
 #include "constants.cpp"
+#include "settings.cpp"
 
 // Callback per ridimensionamento finestra
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -35,12 +36,11 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
 
 extern Real delta_t; 
 
-unsigned int WIDTH  = 1600;
-unsigned int HEIGHT = 800;
+extern unsigned int WIDTH;
+extern unsigned int HEIGHT;
+extern bool DO_VIDEO;
+extern double targetFPS;
 
-bool DO_VIDEO       = true;
-
-const double targetFPS = 60.0;
 const std::chrono::duration<double, std::milli> targetFrameDuration(1000.0 / targetFPS);
 std::chrono::steady_clock::time_point frameStart;
 std::chrono::steady_clock::time_point simulationStart;
@@ -396,6 +396,7 @@ void world_schema() {
 
         Real3 velocity(1.0, 0.0, 0.0);
         if (time < 2.0) velocity *= time / 2.0;
+        else            velocity *= (3.0 - time) / 3.0;
 
         for (const auto& [key, init_pos] : positions) {
             TetraObject* obj      = key.first;
@@ -421,13 +422,15 @@ void world_schema() {
         auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - simulationStart).count();
         double avg_time = static_cast<double>(elapsed_ms) / (step + 1);
 
-        std::cout << avg_time <<  "\n";
-        std::cout << time     <<  "\n\n";
+        std::cout << "avg. step time: " << avg_time <<  " ms \n";
+        std::cout << "simul. time:    " << time     <<  " s\n\n";
 
 
         loop_terminate();
 
         step++;
+
+        if (time > 3.0) break;
     }
 }
 
