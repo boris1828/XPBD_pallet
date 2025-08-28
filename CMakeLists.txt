@@ -25,6 +25,20 @@ target_link_libraries(XPBDPallet
     glm::glm
 )
 
+# ------------------ Ottimizzazioni in Release ------------------
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(MSVC)
+        message(STATUS "Applying MSVC Release optimizations: /O2 /GL /LTCG")
+        add_compile_options(/GL)
+        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} /LTCG")
+    elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        message(STATUS "Applying GCC/Clang Release optimizations: -O3 -march=native -flto -DNDEBUG")
+        add_compile_options(-O3 -march=native -flto -DNDEBUG)
+        set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${CMAKE_EXE_LINKER_FLAGS_RELEASE} -flto")
+    endif()
+endif()
+# ---------------------------------------------------------------
+
 if(WIN32 AND TARGET glfw)
     add_custom_command(TARGET XPBDPallet POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different

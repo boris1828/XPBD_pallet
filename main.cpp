@@ -311,7 +311,7 @@ void wrap() {
         bool on_x_face = (std::abs(p.x - scene_min.x) < epsilon) || (std::abs(p.x - scene_max.x) < epsilon);
         bool on_y_face = (std::abs(p.y - scene_min.y) < epsilon) || (std::abs(p.y - scene_max.y) < epsilon);
         bool on_z_face = (std::abs(p.z - scene_min.z) < epsilon) || (std::abs(p.z - scene_max.z) < epsilon);
-        return on_x_face || on_y_face || on_z_face;
+        return on_x_face /*|| on_y_face*/ || on_z_face;
     };
 
     for (Index o1i = 0; o1i < scene.objects.size(); o1i++) {
@@ -405,6 +405,9 @@ void world_schema() {
             obj->positions[vi]    = positions[{obj, vi}];
         }
 
+        
+        // if (time > 1.5) scene.removeAllConstraints();
+
         loop_init();
 
         XPBD_step(scene);
@@ -460,12 +463,76 @@ void world() {
     }
 }
 
+void world_collision_tester() {
+
+    XPBD_init();
+
+    uint64_t step = 0;
+    Real time     = 0.0;
+
+    // vertex-face collision
+    // scene.addObject(create_tetrahedron(
+    //                     Real3(0.0, -2.0, 0.0),
+    //                     Real3(1.0, -2.0, 0.0),
+    //                     Real3(0.0, -1.0, 0.0),
+    //                     Real3(0.0, -2.0, 1.0)));
+    // scene.addObject(create_tetrahedron(
+    //                     Real3(0.3, -1.7, 0.3),
+    //                     Real3(1.0, -0.5, 1.0),
+    //                     Real3(1.5, -1.3, 0.5),
+    //                     Real3(0.5, -1.3, 1.5)));
+
+    scene.addObject(create_tetrahedron(
+                        Real3(0.0, -1.0, 0.0),
+                        Real3(1.0, -1.0, 0.0),
+                        Real3(0.0, -0.0, 0.0),
+                        Real3(0.0, -1.0, 1.0)));
+
+    scene.addObject(create_tetrahedron(
+                        Real3( 1.0, -0.5, -1.0),
+                        Real3(-1.0, -0.5,  1.0),
+                        Real3(-1.0, -0.0, -1.0),
+                        Real3(-1.0, -1.0, -1.0)));
+
+    TetraObject &obj1 = scene.getObject(0);
+    TetraObject &obj2 = scene.getObject(1);
+
+    obj2.translate(Real3(1.0, 0.0, 1.0) * 0.0707107);
+
+    // ora vediamo la collisione 
+    CollisionInfo coll_info = SAT_tet_tet(
+                                    obj1, obj1.tetras[0], 
+                                    obj2, obj2.tetras[0]);
+
+    // stampiamo le info
+    std::cout << "Intersecting: "      << (coll_info.intersecting ? "Yes" : "No") << "\n";
+    std::cout << "Penetration depth: " << coll_info.penetration << "\n";
+    std::cout << "Collision axis: ("   << coll_info.axis.x      << ", " 
+                                       << coll_info.axis.y      << ", " 
+                                       << coll_info.axis.z      << ")\n";
+    std::cout << "Owner: "             << static_cast<int>(coll_info.owner) << "\n";
+
+    while (!glfwWindowShouldClose(window)) {
+
+        time = step * delta_t;
+
+        loop_init();
+
+        // XPBD_step(scene);
+
+        rendering(); 
+
+        loop_terminate();
+
+        step++;
+    }
+}
 
 int main() {
 
     if (!graphics_init()) return -1; 
 
-    world_schema();
+    world();
 
     graphics_close();
 

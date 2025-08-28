@@ -281,6 +281,25 @@ TetraObject create_box(Real3 starting_corner, Real width, Real height, Real dept
     return obj;
 }
 
+
+TetraObject create_tetrahedron(Real3 p1, Real3 p2, Real3 p3, Real3 p4) {
+    std::vector<Real3> ps;
+    std::vector<Tetrahedron> tetras;
+
+    ps.push_back(p1);
+    ps.push_back(p2);
+    ps.push_back(p3);
+    ps.push_back(p4);
+
+    TetraObject obj(ps);
+
+    tetras.push_back({0.0, nullptr, 0, 1, 2, 3, 0.0});
+
+    obj.init_tetras_and_edges(tetras);
+
+    return obj;
+}
+
 /*
 
 TetraObject create_cube(Real3 center, float size) {

@@ -39,6 +39,7 @@ ROOT_DIR         = Path(__file__).parent.resolve()
 SETTINGS_FILE    = ROOT_DIR  / "settings.cpp"
 BUILD_DIR        = ROOT_DIR  / "build"
 DEBUG_DIR        = BUILD_DIR / "Debug"
+RELEASE_DIR      = BUILD_DIR / "Release"
 VIDEO_FRAMES_DIR = ROOT_DIR  / "video_frame"
 
 # Regex per modificare le variabili nel file C++
@@ -69,11 +70,11 @@ def main():
     update_settings(not args.novideo)
 
     # 2. Build del progetto
-    run_command(["cmake", "--build", "."], cwd=BUILD_DIR)
+    run_command(["cmake", "--build", ".", "--config", "Release"], cwd=BUILD_DIR)
 
     # 3. Esegui simulazione
-    exe_path = DEBUG_DIR / "XPBDPallet.exe"
-    run_command([str(exe_path)], cwd=DEBUG_DIR)
+    exe_path = RELEASE_DIR / "XPBDPallet.exe"
+    run_command([str(exe_path)], cwd=RELEASE_DIR)
 
     # 4. Genera video con ffmpeg
     if not args.novideo:

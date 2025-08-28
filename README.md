@@ -53,10 +53,10 @@ mkdir build
 cd build
 
 # Configura il progetto con CMake
-cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake .. -DCMAKE_TOOLCHAIN_FILE=C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_BUILD_TYPE=Release
 
 # Compila il progetto
-cmake --build .
+cmake --build . --config Release   
 ```
 
 la parte `C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake` è un segnaposto. Ogni utente deve sostituirlo con il percorso reale della propria installazione di vcpkg sul proprio PC.
@@ -80,8 +80,8 @@ Opzioni disponibili:
 
 ## ✅ Esecuzione del progetto senza Launcher
 
-alterntivamente, dopo aver completato la build, l'eseguibile del progetto si trova nella cartella: `build/Debug` (o `build/Release` se hai compilato in modalità Release).
-Per avviare la simulazione, basta lanciare l'eseguibile.
+alterntivamente, dopo aver completato la build, l'eseguibile del progetto si trova nella cartella: `build/Release`  (o `build/Debug` se hai compilato in modalità Debug).
+Per avviare la simulazione, basta lanciare l'eseguibile
 
 ## ✅ Generazione manuale del video
 
