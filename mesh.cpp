@@ -87,6 +87,28 @@ struct TetraMesh {
         }
     }
 
+    void setEdgesToDraw(const std::vector<Edge>& edgesToDraw) {
+        std::vector<GLuint> newIndices;
+        newIndices.reserve(edgesToDraw.size() * 2);
+
+        for (auto& e : edgesToDraw) {
+            newIndices.push_back(e.v1);
+            newIndices.push_back(e.v2);
+        }
+
+        edgeIndices = newIndices;
+
+        glBindVertexArray(VAO); 
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                    sizeof(GLuint) * edgeIndices.size(),
+                    edgeIndices.data(),
+                    GL_DYNAMIC_DRAW);
+
+        glBindVertexArray(0);
+    }
+
     void drawSolid() {
         // TODO
     }

@@ -9,6 +9,7 @@
 #include "AABB.cpp"
 #include "constants.cpp"
 
+extern bool BOX_DRAW_ONLY_EXTERNAL_EDGES;
 extern Real box_edge_compliance;
 
 struct TetraObject {
@@ -180,6 +181,10 @@ struct TetraObject {
         std::fill(velocities.begin(), velocities.end(), velocity);
     }
 
+    void set_edges_to_draw(const std::vector<Edge>& edges_to_draw) {
+        mesh.setEdgesToDraw(edges_to_draw);
+    }
+
 };
 
 std::array<Real3, 4> get_tetra_points(TetraObject* obj, VertexIndex vs[4]) {
@@ -277,6 +282,17 @@ TetraObject create_box(Real3 starting_corner, Real width, Real height, Real dept
     addFaceTetras(0, 3, 7, 4, 14, 8); 
 
     obj.init_tetras_and_edges(tetras);
+
+
+    if (BOX_DRAW_ONLY_EXTERNAL_EDGES) {
+        std::vector<Edge> edges_to_draw;
+        for (const auto& e : obj.edges) {
+            if (e.v1 < 8 && e.v2 < 8) {
+                edges_to_draw.push_back(e);
+            }
+        }
+        obj.set_edges_to_draw(edges_to_draw);
+    }
 
     return obj;
 }

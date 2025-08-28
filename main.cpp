@@ -532,7 +532,7 @@ int main() {
 
     if (!graphics_init()) return -1; 
 
-    world();
+    world_schema();
 
     graphics_close();
 

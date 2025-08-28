@@ -10,7 +10,7 @@
 #include <stdio.h>
 
 uint64_t steps_per_second    = 4*60;
-uint64_t iterations_per_step = 1;
+uint64_t iterations_per_step = 10;
 Real delta_t;
 
 extern Real coll_compliance;

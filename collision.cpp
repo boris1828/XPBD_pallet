@@ -17,33 +17,6 @@ struct CollisionInfo {
     uint8_t owner;
 };
 
-
-// Real signed_volume(Real3 a, Real3 b, Real3 c, Real3 d) {
-//     Real3 ab = {b.x-a.x, b.y-a.y, b.z-a.z};
-//     Real3 ac = {c.x-a.x, c.y-a.y, c.z-a.z};
-//     Real3 ad = {d.x-a.x, d.y-a.y, d.z-a.z};
-//     return (ab.x*(ac.y*ad.z - ac.z*ad.y) -
-//             ab.y*(ac.x*ad.z - ac.z*ad.x) +
-//             ab.z*(ac.x*ad.y - ac.y*ad.x)) / 6.0;
-// }
-
-// bool point_in_tetrahedron(Real3 p, Real3 a, Real3 b, Real3 c, Real3 d) {
-//     Real V  = signed_volume(a,b,c,d);
-//     Real V1 = signed_volume(p,b,c,d);
-//     Real V2 = signed_volume(a,p,c,d);
-//     Real V3 = signed_volume(a,b,p,d);
-//     Real V4 = signed_volume(a,b,c,p);
-//     return (V*V1 >= 0) && (V*V2 >= 0) && (V*V3 >= 0) && (V*V4 >= 0);
-// }
-
-// bool is_point_in_tetrahedron(Real3 p, Real3 a, Real3 b, Real3 c, Real3 d, Real V) {
-//     Real V1 = signed_volume(p,b,c,d);
-//     Real V2 = signed_volume(a,p,c,d);
-//     Real V3 = signed_volume(a,b,p,d);
-//     Real V4 = signed_volume(a,b,c,p);
-//     return (V*V1 >= 0) && (V*V2 >= 0) && (V*V3 >= 0) && (V*V4 >= 0);
-// }
-
 bool same_side(Real3 v1, Real3 v2, Real3 v3, Real3 v4, Real3 p)
 {
     Real3 normal = glm::cross(v2 - v1, v3 - v1);
@@ -51,7 +24,6 @@ bool same_side(Real3 v1, Real3 v2, Real3 v3, Real3 v4, Real3 p)
     Real dotP    = glm::dot(normal, p - v1);
     return dotV4 * dotP >= 0;
 }
-
 
 bool point_in_tetrahedron(Real3 v1, Real3 v2, Real3 v3, Real3 v4, Real3 p) {
         return 
