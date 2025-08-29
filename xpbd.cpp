@@ -1,6 +1,8 @@
 #pragma once
 
 #include <vector>
+#include <chrono>
+
 #include "object.cpp"
 #include "types.cpp"
 
@@ -54,7 +56,8 @@ void XPBD_collect_collisions(
                     Tetrahedron &t1 = objects[o1i].tetras[t1i];
                     Tetrahedron &t2 = objects[o2i].tetras[t2i];
 
-                    if (!bounding_sphere_intersect(t1, t2)) continue;
+                    // if (!bounding_sphere_intersect(t1, t2)) continue;
+                    if (!t1.aabb.intersects(t2.aabb)) continue;
 
                     CollisionInfo info = SAT_tet_tet(
                                                 objects[o1i], t1, 
@@ -126,13 +129,21 @@ void XPBD_collision_vertex_ripositioning(
 
 void XPBD_step(Scene &scene) 
 {
+
+    for (TetraObject &obj : scene.objects) obj.reset_tetras();
+
     std::vector<Collision> collisions;
+
+    auto start = std::chrono::high_resolution_clock::now();
     XPBD_collect_collisions(scene.objects, collisions);
+    auto end      = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "collect coll. time: " << duration << " ms" << std::endl;
+
     XPBD_collision_vertex_ripositioning(scene.objects, collisions);
 
     for (TetraObject &obj : scene.objects) {
         for (VertexIndex vi=0; vi<obj.num_vertices(); vi++) {
-
             if (obj.inv_masses[vi] == 0.0) continue;
             obj.old_positions[vi]  = obj.positions[vi];
             obj.velocities[vi]    += gravity * delta_t;

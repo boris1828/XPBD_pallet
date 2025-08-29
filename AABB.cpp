@@ -1,3 +1,5 @@
+#pragma once
+
 #include "types.cpp"
 
 struct AABB {
@@ -17,5 +19,10 @@ struct AABB {
         return (min.x <= other.max.x && max.x >= other.min.x &&
                 min.y <= other.max.y && max.y >= other.min.y &&
                 min.z <= other.max.z && max.z >= other.min.z);
+    }
+
+    void expand(const Real3 &point) {
+        min = glm::min(min, point);
+        max = glm::max(max, point);
     }
 };

@@ -4,6 +4,7 @@
 #include <algorithm>
 
 #include "types.cpp"
+#include "AABB.cpp"
 
 struct TetraObject;
 
@@ -45,8 +46,11 @@ struct GlobalConstraint : Constraint {
 struct Tetrahedron : InternalConstraint {
     VertexIndex vs[4];
     Real        rest_volume;
+    AABB        aabb;
+    Real3       normals[4];
+    Real3       edges[6];
     Real3       center;
-    Real        radius;
+    bool        initialized;
 
     Tetrahedron(
         Real compliance,
@@ -65,30 +69,46 @@ struct Tetrahedron : InternalConstraint {
         vs[3] = v4;
     }
 
-    void update_bounding_sphere() {
+    inline void reset() { initialized = false; }
+
+    inline void init_normals_edges() {
+
+        if (initialized) return;
+
+        std::array<Real3, 4> ps = get_tetra_points(obj, vs);
+
+        auto addNormal = [&](Real3 a, Real3 b, Real3 c, Real3 opp, int idx) {
+            Real3 normal     = glm::normalize(glm::cross(b - a, c - a));
+            Real3 center     = (a + b + c) / 3.0;
+            Real3 toOpposite = opp - center;
+            if (glm::dot(normal, toOpposite) > 0.0) normal = -normal;
+
+            normals[idx] = normal;
+        };
+
+        addNormal(ps[0], ps[1], ps[2], ps[3], 0);
+        addNormal(ps[0], ps[2], ps[3], ps[1], 1);
+        addNormal(ps[0], ps[1], ps[3], ps[2], 2);
+        addNormal(ps[1], ps[2], ps[3], ps[0], 3);
+
+        edges[0] = ps[1] - ps[0];
+        edges[1] = ps[2] - ps[0];
+        edges[2] = ps[3] - ps[0];
+        edges[3] = ps[2] - ps[1];
+        edges[4] = ps[3] - ps[1];
+        edges[5] = ps[3] - ps[2];
+
+        center = (ps[0] + ps[1] + ps[2] + ps[3]) / 4.0;
+
+        initialized = true;
+    }
+
+    void update_aabb() {
         std::array<Real3, 4> positions = get_tetra_points(obj, vs);
-        Real3 p1 = positions[0];
-        Real3 p2 = positions[1];
-        Real3 p3 = positions[2];
-        Real3 p4 = positions[3];
-        center = (p1 + p2 + p3 + p4) / 4.0;
-        radius = glm::length(p1 - center);
-        radius = std::max(radius, glm::length(p2 - center));
-        radius = std::max(radius, glm::length(p3 - center));
-        radius = std::max(radius, glm::length(p4 - center));        
+        aabb = AABB(positions[0], positions[0]);
+        for (int i=1; i<4; i++) aabb.expand(positions[i]);
     }
 };
-
-bool bounding_sphere_intersect(const Tetrahedron& t1, const Tetrahedron& t2) {
-    Real3 diff = { t1.center.x - t2.center.x,
-                   t1.center.y - t2.center.y,
-                   t1.center.z - t2.center.z };
-
-    Real distSq = diff.x * diff.x + diff.y * diff.y + diff.z * diff.z;
-    Real rSum   = t1.radius + t2.radius;
-
-    return distSq <= rSum * rSum;
-}
 
 struct Edge : InternalConstraint {
     VertexIndex v1, v2; 

@@ -2,6 +2,6 @@
 
 unsigned int WIDTH  = 1600;
 unsigned int HEIGHT = 800;
-bool DO_VIDEO       = false;
+bool DO_VIDEO       = true;
 double targetFPS    = 60.0;
 bool BOX_DRAW_ONLY_EXTERNAL_EDGES = true;

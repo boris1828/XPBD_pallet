@@ -131,12 +131,12 @@ void loop_terminate() {
     glfwSwapBuffers(window);
     glfwPollEvents();
 
-    auto frameEnd = std::chrono::high_resolution_clock::now();
-    auto frameDuration = frameEnd - frameStart;
+    // auto frameEnd = std::chrono::high_resolution_clock::now();
+    // auto frameDuration = frameEnd - frameStart;
 
-    if (frameDuration < targetFrameDuration) {
-        std::this_thread::sleep_for(targetFrameDuration - frameDuration);
-    }
+    // if (frameDuration < targetFrameDuration) {
+    //     std::this_thread::sleep_for(targetFrameDuration - frameDuration);
+    // }
 }
 
 // ############# RENDERING #############
@@ -395,8 +395,9 @@ void world_schema() {
         time = step * delta_t;
 
         Real3 velocity(1.0, 0.0, 0.0);
-        if (time < 2.0) velocity *= time / 2.0;
-        else            velocity *= (3.0 - time) / 3.0;
+        if (time < 2.0)       velocity *= time / 2.0;
+        else if (time < 3.0)  velocity *= (3.0 - time) / 1.0;
+        else                  velocity *= 0.0;
 
         for (const auto& [key, init_pos] : positions) {
             TetraObject* obj      = key.first;
@@ -405,35 +406,32 @@ void world_schema() {
             obj->positions[vi]    = positions[{obj, vi}];
         }
 
-        
-        // if (time > 1.5) scene.removeAllConstraints();
-
-        loop_init();
+        // if (time > 2.0) scene.removeAllConstraints();
 
         XPBD_step(scene);
 
-        if (DO_VIDEO) {
-            if (step%10 == 0) { 
-                rendering();
-                saveFrame(WIDTH, HEIGHT, step/10);
-            }
+        if (DO_VIDEO && step%10 == 0) {
+            loop_init();
+            rendering();
+            saveFrame(WIDTH, HEIGHT, step/10);
+            loop_terminate();
         } 
-        else rendering(); 
+        else {
+            loop_init();
+            rendering();
+            loop_terminate();
+        }
 
         auto now        = std::chrono::high_resolution_clock::now();
         auto elapsed    = now - simulationStart;
         auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - simulationStart).count();
         double avg_time = static_cast<double>(elapsed_ms) / (step + 1);
 
-        std::cout << "avg. step time: " << avg_time <<  " ms \n";
-        std::cout << "simul. time:    " << time     <<  " s\n\n";
-
-
-        loop_terminate();
+        std::cout << "avg. step time:     " << avg_time <<  " ms \n";
+        std::cout << "simul. time:        " << time     <<  " s\n\n";
 
         step++;
-
-        if (time > 3.0) break;
+        if (time > 4.0) break;
     }
 }
 

@@ -4,4 +4,4 @@
 
 Real coll_compliance     = 0.0001;
 Real box_edge_compliance = 0.00001;
-Real wrap_compliance     = 0.0005;
+Real wrap_compliance     = 0.00035;

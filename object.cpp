@@ -155,14 +155,18 @@ struct TetraObject {
 
         aabb = AABB(min, max);
 
-        for (auto& t : tetras) t.update_bounding_sphere();
-
+        // for (auto& t : tetras) t.update_bounding_sphere();
+        for (auto& t : tetras) t.update_aabb();
     }
 
     void draw() {
         mesh.drawWireframe();
         // mesh.drawFaceNormals(tetras);
         // mesh.drawPoints();
+    }
+
+    void reset_tetras() {
+        for (auto& t : tetras) t.reset();
     }
 
     uint32_t num_vertices() const {

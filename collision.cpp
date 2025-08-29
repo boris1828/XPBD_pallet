@@ -56,42 +56,17 @@ std::array<Real, 2> project_tetrahedron(const std::array<Real3, 4>& ps, const Re
         min_proj  = std::min(min_proj, proj);
         max_proj  = std::max(max_proj, proj);
     }
+
     return {min_proj, max_proj};
-}
-
-void add_face_normals(const std::array<Real3, 4>& ps, std::vector<Real3>& axes) {
-
-    auto addNormal = [&](Real3 a, Real3 b, Real3 c, Real3 opp) {
-        Real3 normal     = glm::normalize(glm::cross(b - a, c - a));
-        Real3 center     = (a + b + c) / 3.0;
-        Real3 toOpposite = opp - center;
-        if (glm::dot(normal, toOpposite) > 0.0) normal = -normal;
-
-        axes.push_back(normal);
-    };
-
-    addNormal(ps[0], ps[1], ps[2], ps[3]);
-    addNormal(ps[0], ps[2], ps[3], ps[1]);
-    addNormal(ps[0], ps[1], ps[3], ps[2]);
-    addNormal(ps[1], ps[2], ps[3], ps[0]);
-
-}
-
-void get_tet_edges(
-        const std::array<Real3, 4>& ps, 
-        std::vector<Real3>& edges) {
-    edges.push_back(ps[1] - ps[0]);
-    edges.push_back(ps[2] - ps[0]);
-    edges.push_back(ps[3] - ps[0]);
-    edges.push_back(ps[2] - ps[1]);
-    edges.push_back(ps[3] - ps[1]);
-    edges.push_back(ps[3] - ps[2]);
 }
 
 CollisionInfo SAT_tet_tet(
         TetraObject &obj1, Tetrahedron &tetra1, 
         TetraObject &obj2, Tetrahedron &tetra2) {
     
+    tetra1.init_normals_edges();
+    tetra2.init_normals_edges();
+
     std::array<Real3, 4> p1 = {
         obj1.positions[tetra1.vs[0]],
         obj1.positions[tetra1.vs[1]],
@@ -109,24 +84,15 @@ CollisionInfo SAT_tet_tet(
     std::vector<Real3>   axes;
     std::vector<uint8_t> axes_owner;
 
-    add_face_normals(p1, axes);
+    for (const auto& n : tetra1.normals) axes.push_back(n);
     axes_owner.insert(axes_owner.end(), 4, 1);
-    add_face_normals(p2, axes);
+    for (const auto& n : tetra2.normals) axes.push_back(n);
     axes_owner.insert(axes_owner.end(), 4, 2);
 
-    std::vector<Real3> edges1;
-    std::vector<Real3> edges2;
+    Real3 center_vec = tetra2.center - tetra1.center;
 
-    get_tet_edges(p1, edges1);
-    get_tet_edges(p2, edges2);
-
-    Real3 c1 = (p1[0] + p1[1] + p1[2] + p1[3]) / 4.0;
-    Real3 c2 = (p2[0] + p2[1] + p2[2] + p2[3]) / 4.0;
-
-    Real3 center_vec = c2 - c1;
-
-    for (const auto& e1 : edges1) {
-        for (const auto& e2 : edges2) {
+    for (const auto& e1 : tetra1.edges) {
+        for (const auto& e2 : tetra2.edges) {
             Real3 axis = glm::cross(e1, e2);
 
             if (glm::length(axis) < 1e-6) continue;
