@@ -185,6 +185,10 @@ struct TetraObject {
         std::fill(velocities.begin(), velocities.end(), velocity);
     }
 
+    void make_static() {
+        std::fill(inv_masses.begin(), inv_masses.end(), 0.0);
+    }
+
     void set_edges_to_draw(const std::vector<Edge>& edges_to_draw) {
         mesh.setEdgesToDraw(edges_to_draw);
     }
@@ -196,6 +200,13 @@ std::array<Real3, 4> get_tetra_points(TetraObject* obj, VertexIndex vs[4]) {
             obj->positions[vs[1]],
             obj->positions[vs[2]],
             obj->positions[vs[3]]};
+}
+
+std::array<Real3, 4> get_old_tetra_points(TetraObject* obj, VertexIndex vs[4]) {
+    return {obj->old_positions[vs[0]],
+            obj->old_positions[vs[1]],
+            obj->old_positions[vs[2]],
+            obj->old_positions[vs[3]]};
 }
 
 TetraObject create_box(Real3 starting_corner, Real width, Real height, Real depth) {
@@ -295,6 +306,111 @@ TetraObject create_box(Real3 starting_corner, Real width, Real height, Real dept
                 edges_to_draw.push_back(e);
             }
         }
+        obj.set_edges_to_draw(edges_to_draw);
+    }
+
+    return obj;
+}
+
+TetraObject create_ramp(Real3 starting_corner, Real width, Real height, Real depth) {
+
+    std::vector<Real3> ps;
+    std::vector<Tetrahedron> tetras;
+
+    Real hheight = height / 2.0;
+    Real hwidth  = width  / 2.0;
+    Real hdepth  = depth  / 2.0;
+
+    Real3 C(starting_corner.x + hwidth, 
+            starting_corner.y + hheight, 
+            starting_corner.z + hdepth);
+
+    Real3 A1(C.x - hwidth, C.y + hheight, C.z - hdepth);
+    Real3 A2(C.x - hwidth, C.y + hheight, C.z + hdepth);
+    Real3 A3(C.x + hwidth, C.y + hheight, C.z + hdepth);
+    Real3 A4(C.x + hwidth, C.y + hheight, C.z - hdepth);
+
+    Real3 B1(C.x - hwidth, C.y - hheight, C.z - hdepth);
+    Real3 B2(C.x - hwidth, C.y - hheight, C.z + hdepth);
+    Real3 B3(C.x + hwidth, C.y - hheight, C.z + hdepth);
+    Real3 B4(C.x + hwidth, C.y - hheight, C.z - hdepth);
+
+    ps.push_back(A1); // 0
+    ps.push_back(A2); // 1
+    ps.push_back(A3); // 2
+    ps.push_back(A4); // 3
+    ps.push_back(B1); // 4
+    ps.push_back(B2); // 5
+    ps.push_back(B3); // 6
+    ps.push_back(B4); // 7
+    ps.push_back(C);  // 8
+
+
+    Real3 Ct = C + Real3(0.0,  hheight, 0.0);
+    Real3 Cd = C + Real3(0.0, -hheight, 0.0);
+
+    Real3 Cl = C + Real3(-hwidth, 0.0, 0.0);
+    Real3 Cr = C + Real3(+hwidth, 0.0, 0.0);
+    
+    Real3 Cf = C + Real3(0.0, 0.0, +hdepth);
+    Real3 Cb = C + Real3(0.0, 0.0, -hdepth);
+
+    ps.push_back(Ct); // 9
+    ps.push_back(Cd); // 10
+    ps.push_back(Cl); // 11
+    ps.push_back(Cr); // 12
+    ps.push_back(Cf); // 13
+    ps.push_back(Cb); // 14
+
+
+    TetraObject obj(ps);
+    Real volume = 0.0;
+
+    auto addFaceTetras = [&](
+            VertexIndex v0, 
+            VertexIndex v1, 
+            VertexIndex v2, 
+            VertexIndex v3,
+            VertexIndex face_center, 
+            VertexIndex center) {
+        tetras.push_back({0.0, nullptr, v0, v1, face_center, center, volume});
+        tetras.push_back({0.0, nullptr, v0, v3, face_center, center, volume});
+        tetras.push_back({0.0, nullptr, v2, v1, face_center, center, volume});
+        tetras.push_back({0.0, nullptr, v2, v3, face_center, center, volume});
+    };
+
+    auto addFaceTetras2 = [&](
+            VertexIndex v0, 
+            VertexIndex v1, 
+            VertexIndex v2, 
+            VertexIndex face_center, 
+            VertexIndex center) {
+        tetras.push_back({0.0, nullptr, v0, v2, face_center, center, volume});
+        tetras.push_back({0.0, nullptr, v1, v2, face_center, center, volume});
+    };
+
+    // addFaceTetras(0, 1, 2, 3,  9, 8); 
+    addFaceTetras(4, 5, 6, 7, 10, 8); 
+    addFaceTetras(0, 1, 5, 4, 11, 8);
+    // addFaceTetras(3, 2, 6, 7, 12, 8); 
+    addFaceTetras2(1, 6, 5, 13, 8); 
+    addFaceTetras2(0, 7, 4, 14, 8); 
+
+    obj.init_tetras_and_edges(tetras);
+
+    if (BOX_DRAW_ONLY_EXTERNAL_EDGES) {
+        std::vector<Edge> edges_to_draw;
+        for (const auto& e : obj.edges) {
+            if (e.v1 < 8 && e.v2 < 8) {
+                edges_to_draw.push_back(e);
+            }
+            if ((e.v1 >= 13 && e.v2 != 8) || (e.v2 >= 13 && e.v1 != 8)) {
+                edges_to_draw.push_back(e);
+            }
+        }
+
+
+
         obj.set_edges_to_draw(edges_to_draw);
     }
 

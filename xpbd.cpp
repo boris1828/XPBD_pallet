@@ -27,6 +27,7 @@ struct Collision {
     TetraIndex t1;
     TetraIndex t2;
     CollisionInfo info;
+    Real3 dp_tang;
 };
 
 void XPBD_init() {
@@ -56,7 +57,6 @@ void XPBD_collect_collisions(
                     Tetrahedron &t1 = objects[o1i].tetras[t1i];
                     Tetrahedron &t2 = objects[o2i].tetras[t2i];
 
-                    // if (!bounding_sphere_intersect(t1, t2)) continue;
                     if (!t1.aabb.intersects(t2.aabb)) continue;
 
                     CollisionInfo info = SAT_tet_tet(
@@ -64,13 +64,19 @@ void XPBD_collect_collisions(
                                                 objects[o2i], t2);
 
                     if (!info.intersecting) continue;
-                    
+
+                    Real3 dp1 = t1.center - t1.old_center;
+                    Real3 dp2 = t2.center - t2.old_center;
+                    Real3 dp  = dp1 - dp2;
+                    Real3 dpt = dp - (glm::dot(dp, info.axis) * info.axis);
+
                     Collision collision;
-                    collision.obj1  = &objects[o1i];
-                    collision.obj2  = &objects[o2i];
-                    collision.t1    = t1i;
-                    collision.t2    = t2i;
-                    collision.info  = info;
+                    collision.obj1    = &objects[o1i];
+                    collision.obj2    = &objects[o2i];
+                    collision.t1      = t1i;
+                    collision.t2      = t2i;
+                    collision.info    = info;
+                    collision.dp_tang = dpt;
 
                     collisions.push_back(collision);
 
@@ -99,9 +105,9 @@ void XPBD_collision_vertex_ripositioning(
         for (VertexIndex vi = 0; vi < obj.num_vertices(); vi++) {
 
             CollisionConstraint constraint(coll_compliance, &obj, vi, Real3(0.0), true);
-
+            
             size_t num_collisions = obj.vertex_collisions[vi].size();
-            if (num_collisions == 0) {
+            if (num_collisions == 0) { // || vi >= 8) {
                 constraint.active = false;
                 obj.vertex_collisions_constraints[vi] = constraint;
                 continue;
@@ -120,6 +126,8 @@ void XPBD_collision_vertex_ripositioning(
             }
 
             constraint.goal_position /= (Real) num_collisions;
+            constraint.penetration    = glm::length(constraint.goal_position);
+            constraint.normal         = glm::normalize(constraint.goal_position);
             constraint.goal_position += obj.positions[vi];
 
             obj.vertex_collisions_constraints[vi] = constraint;
@@ -133,12 +141,11 @@ void XPBD_step(Scene &scene)
     for (TetraObject &obj : scene.objects) obj.reset_tetras();
 
     std::vector<Collision> collisions;
-
-    auto start = std::chrono::high_resolution_clock::now();
+    // auto start = std::chrono::high_resolution_clock::now();
     XPBD_collect_collisions(scene.objects, collisions);
-    auto end      = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "collect coll. time: " << duration << " ms" << std::endl;
+    // auto end      = std::chrono::high_resolution_clock::now();
+    // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    // std::cout << "collect coll. time: " << duration << " ms" << std::endl;
 
     XPBD_collision_vertex_ripositioning(scene.objects, collisions);
 
@@ -174,6 +181,7 @@ void XPBD_step(Scene &scene)
 
     for (TetraObject &obj : scene.objects) {
         for (VertexIndex vi=0; vi<obj.num_vertices(); vi++) {
+            if (obj.inv_masses[vi] == 0.0) continue;
             if (obj.positions[vi].y < ground_y) obj.positions[vi].y = ground_y;
             obj.velocities[vi] = (obj.positions[vi] - obj.old_positions[vi]) / delta_t;
         }

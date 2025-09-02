@@ -28,6 +28,7 @@ namespace fs = std::filesystem;
 #include "XMLparser.cpp"
 #include "constants.cpp"
 #include "settings.cpp"
+#include "rendering.cpp"
 
 // Callback per ridimensionamento finestra
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
@@ -49,7 +50,8 @@ GLFWwindow* window         = nullptr;
 unsigned int objectProgram = 0;
 unsigned int groundProgram = 0;
 Scene  scene;
-Ground ground; 
+Ground ground;
+SpringRenderer spring_renderer; 
 
 extern Real wrap_compliance;
 
@@ -131,12 +133,12 @@ void loop_terminate() {
     glfwSwapBuffers(window);
     glfwPollEvents();
 
-    // auto frameEnd = std::chrono::high_resolution_clock::now();
-    // auto frameDuration = frameEnd - frameStart;
+    auto frameEnd = std::chrono::high_resolution_clock::now();
+    auto frameDuration = frameEnd - frameStart;
 
-    // if (frameDuration < targetFrameDuration) {
-    //     std::this_thread::sleep_for(targetFrameDuration - frameDuration);
-    // }
+    if (frameDuration < targetFrameDuration) {
+        std::this_thread::sleep_for(targetFrameDuration - frameDuration);
+    }
 }
 
 // ############# RENDERING #############
@@ -144,13 +146,22 @@ void loop_terminate() {
 glm::mat4 get_MVP(Real3 center = Real3(0.0)) {
     
     glm::mat4 model = glm::mat4(1.0f);
-    model           = glm::rotate(model, glm::radians(0.0f), /*((float)glfwGetTime()),*/ glm::vec3(0.3f, 1.0f, 0.0f));
+    // model           = glm::rotate(model, ((float)glfwGetTime()), glm::vec3(0.0, 1.0, 0.0));
+    model           = glm::rotate(model, glm::radians(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::mat4 view = glm::lookAt(
-        glm::vec3(center.x, center.y, 2.0),      // posizione camera
-        glm::vec3(center.x, center.y, center.z), // guarda al centro
+        glm::vec3(center.x-0.4, -1.7, 2.0),      // posizione camera
+        glm::vec3(center.x-0.4, -1.7, center.z), // guarda al centro
         glm::vec3(0.0f, 1.0f, 0.0f)              // up
     );
+
+    
+    // glm::mat4 view = glm::lookAt(
+    //     glm::vec3(center.x, -1.0, 4.3),      // posizione camera
+    //     glm::vec3(center.x, -1.0, center.z), // guarda al centro
+    //     glm::vec3(0.0f, 1.0f, 0.0f)              // up
+    // );
+
     glm::mat4 projection = glm::perspective(
         glm::radians(80.0f),
         ((float)WIDTH) / ((float)HEIGHT),
@@ -183,6 +194,8 @@ void rendering() {
     set_shader(groundProgram, MVP);
     ground.draw();
     ground.drawGrid();
+
+    spring_renderer.draw(scene);
 
 }
 
@@ -318,11 +331,15 @@ void wrap() {
         for (Index o2i = o1i + 1; o2i < scene.objects.size(); o2i++) {
             TetraObject &obj1 = scene.objects[o1i];
             TetraObject &obj2 = scene.objects[o2i];
+
             for (VertexIndex vi1 = 0; vi1 < obj1.num_vertices(); vi1++) {
                 for (VertexIndex vi2 = 0; vi2 < obj2.num_vertices(); vi2++) {
-                    Real distance = glm::length(obj1.positions[vi1] - obj2.positions[vi2]);
-                    if (distance < .3) {
-                        if (is_on_aabb_face(obj1.positions[vi1])) {
+
+                    Real3 connection = obj1.positions[vi1] - obj2.positions[vi2];
+                    Real distance    = glm::length(connection);
+                    Real verticality = std::abs(glm::dot(glm::normalize(connection), Real3(0.0, 1.0, 0.0)));
+                    if (distance < 0.4 && verticality < 0.8) {
+                        if (is_on_aabb_face(obj1.positions[vi1]) && is_on_aabb_face(obj2.positions[vi2])) {
                             attach_vertices(scene, o1i, o2i, vi1, vi2, distance);
                         }
                     }
@@ -373,6 +390,8 @@ void world_schema() {
 
     wrap();
 
+    spring_renderer.init(scene);
+
     std::unordered_map<std::pair<TetraObject*, VertexIndex>, Real3, KeyHash, KeyEqual> positions;
 
     for (auto& obj : scene.objects) {
@@ -394,9 +413,9 @@ void world_schema() {
 
         time = step * delta_t;
 
-        Real3 velocity(1.0, 0.0, 0.0);
-        if (time < 2.0)       velocity *= time / 2.0;
-        else if (time < 3.0)  velocity *= (3.0 - time) / 1.0;
+        Real3 velocity(8.0, 0.0, 0.0);
+        if (time < 2.0)       velocity *= Real3(0.0, 0.0, 0.0) + time / 2.0;
+        else if (time < 3.0)  velocity *= Real3(0.0, 0.0, 0.0) + (3.0 - time) / 1.0;
         else                  velocity *= 0.0;
 
         for (const auto& [key, init_pos] : positions) {
@@ -405,8 +424,6 @@ void world_schema() {
             positions[{obj, vi}] += velocity * delta_t;
             obj->positions[vi]    = positions[{obj, vi}];
         }
-
-        // if (time > 2.0) scene.removeAllConstraints();
 
         XPBD_step(scene);
 
@@ -442,12 +459,44 @@ void world() {
     uint64_t step = 0;
     Real time     = 0.0;
 
-    scene.addObject(create_box(Real3(0.0, -2.0, -2.0), 1.0, 1.0, 1.0));
-    scene.addObject(create_box(Real3(0.9, -1.0, -2.0), 1.0, 1.0, 1.0));
+    scene.addObject(create_box(Real3(-1.0, -2.0, -0.0), 1.0, 1.0, 1.0));
+    scene.addObject(create_box(Real3(-1.0, -1.0, -0.0), 1.0, 1.0, 1.0));
+    scene.getObject(0).make_static();
+    scene.getObject(1).make_static();
+
+    scene.addObject(create_box(Real3(0.0, -2.0, -1.0), 1.0, 1.0, 1.0));
+    scene.addObject(create_box(Real3(0.0, -1.0, -1.0), 1.0, 1.0, 1.0));
+    scene.getObject(2).make_static();
+    scene.getObject(3).make_static();
+
+    scene.addObject(create_box(Real3(0.0, -2.0, 1.0), 1.0, 1.0, 1.0));
+    scene.addObject(create_box(Real3(0.0, -1.0, 1.0), 1.0, 1.0, 1.0));
+    scene.getObject(4).make_static();
+    scene.getObject(5).make_static();
+
+    scene.addObject(create_box(Real3(1.0, -2.0, 0.0), 1.0, 1.0, 1.0));
+    scene.addObject(create_box(Real3(1.0, -1.0, 0.0), 1.0, 1.0, 1.0));
+    scene.getObject(6).make_static();
+    scene.getObject(7).make_static();
+
+    scene.addObject(create_box(Real3(0.0, -2.0, 0.0), 1.0, 1.0, 1.0));
+    scene.addObject(create_box(Real3(0.0, -1.0, 0.0), 1.0, 1.0, 1.0));
+    // scene.addObject(create_box(Real3(-0.5, -1.5, -0.5), 0.5, 0.5, 0.5));
+    // scene.addObject(create_box(Real3(-0.5, 3.0, -1.5), 0.5, 0.5, 0.5));
+    // scene.addObject(create_box(Real3(-0.5, 4.0, -0.5), 0.5, 0.5, 0.5));
 
     while (!glfwWindowShouldClose(window)) {
 
         time = step * delta_t;
+
+        scene.getObject(0).translate(Real3(1.0, 0.0, 0.0) * 0.01);
+        scene.getObject(1).translate(Real3(1.0, 0.0, 0.0) * 0.01);
+        scene.getObject(2).translate(Real3(1.0, 0.0, 0.0) * 0.01);
+        scene.getObject(3).translate(Real3(1.0, 0.0, 0.0) * 0.01);
+        scene.getObject(4).translate(Real3(1.0, 0.0, 0.0) * 0.01);
+        scene.getObject(5).translate(Real3(1.0, 0.0, 0.0) * 0.01);
+        scene.getObject(6).translate(Real3(1.0, 0.0, 0.0) * 0.01);
+        scene.getObject(7).translate(Real3(1.0, 0.0, 0.0) * 0.01);
 
         loop_init();
 

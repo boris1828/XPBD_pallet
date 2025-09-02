@@ -9,6 +9,8 @@
 struct TetraObject;
 
 std::array<Real3, 4> get_tetra_points(TetraObject* obj, VertexIndex vs[4]);
+std::array<Real3, 4> get_old_tetra_points(TetraObject* obj, VertexIndex vs[4]);
+
 
 struct Constraint {
     Real compliance;
@@ -50,6 +52,7 @@ struct Tetrahedron : InternalConstraint {
     Real3       normals[4];
     Real3       edges[6];
     Real3       center;
+    Real3       old_center;
     bool        initialized;
 
     Tetrahedron(
@@ -75,7 +78,8 @@ struct Tetrahedron : InternalConstraint {
 
         if (initialized) return;
 
-        std::array<Real3, 4> ps = get_tetra_points(obj, vs);
+        std::array<Real3, 4> ps     = get_tetra_points(obj, vs);
+        std::array<Real3, 4> old_ps = get_old_tetra_points(obj, vs);
 
         auto addNormal = [&](Real3 a, Real3 b, Real3 c, Real3 opp, int idx) {
             Real3 normal     = glm::normalize(glm::cross(b - a, c - a));
@@ -98,7 +102,8 @@ struct Tetrahedron : InternalConstraint {
         edges[4] = ps[3] - ps[1];
         edges[5] = ps[3] - ps[2];
 
-        center = (ps[0] + ps[1] + ps[2] + ps[3]) / 4.0;
+        center     = (ps[0] + ps[1] + ps[2] + ps[3]) / 4.0;
+        old_center = (old_ps[0] + old_ps[1] + old_ps[2] + old_ps[3]) / 4.0;
 
         initialized = true;
     }
@@ -129,6 +134,8 @@ struct Edge : InternalConstraint {
 struct CollisionConstraint : InternalConstraint{
     VertexIndex v; 
     Real3 goal_position;
+    Real3 normal;
+    Real  penetration;
     bool  active;
 
     CollisionConstraint()

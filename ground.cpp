@@ -9,10 +9,10 @@ struct Ground {
     ~Ground();
 
     void draw();
-    void init(float size = 10.0f, float yPos = -2.0f, glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
+    void init(float size = 100.0f, float yPos = -2.0f, glm::vec4 color = glm::vec4(1.0f, 1.0f, 1.0f, 0.1f));
 
     void drawGrid();
-    void initGrid(float size = 10.0f, float yPos = -2.0f, glm::vec4 lineColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f));
+    void initGrid(float size = 100.0f, float yPos = -2.0f, glm::vec4 lineColor = glm::vec4(1.0f, 1.0f, 1.0f, 0.3f));
 
     GLuint VAO, VBO, EBO;
     GLuint gridVAO, gridVBO;
@@ -23,11 +23,12 @@ struct Ground {
 void Ground::init(float size, float yPos, glm::vec4 color) {
 
     float half = size / 2.0f;
+    float halfz = 3.0;
     float vertices[] = {
-        -half, yPos, -half, color.r, color.g, color.b, color.a,
-         half, yPos, -half, color.r, color.g, color.b, color.a,
-         half, yPos,  half, color.r, color.g, color.b, color.a,
-        -half, yPos,  half, color.r, color.g, color.b, color.a
+        -half, yPos, -halfz, color.r, color.g, color.b, color.a,
+         half, yPos, -halfz, color.r, color.g, color.b, color.a,
+         half, yPos,  halfz, color.r, color.g, color.b, color.a,
+        -half, yPos,  halfz, color.r, color.g, color.b, color.a
     };
 
     unsigned int indices[] = {
@@ -60,14 +61,16 @@ void Ground::init(float size, float yPos, glm::vec4 color) {
 }
 
 void Ground::initGrid(float size, float yPos, glm::vec4 lineColor) {
-    float half = size / 2.0f;
+    float half  = size / 2.0f;
+    float halfz = 3.0;
     std::vector<float> gridVertices;
+    
 
     for (float x = -half; x <= half; x += 1.0f) {
         // Linea parallela all'asse Z
         gridVertices.push_back(x);
         gridVertices.push_back(yPos + 0.01f); // leggermente sopra per evitare z-fighting
-        gridVertices.push_back(-half);
+        gridVertices.push_back(-halfz);
         gridVertices.push_back(lineColor.r);
         gridVertices.push_back(lineColor.g);
         gridVertices.push_back(lineColor.b);
@@ -75,7 +78,7 @@ void Ground::initGrid(float size, float yPos, glm::vec4 lineColor) {
 
         gridVertices.push_back(x);
         gridVertices.push_back(yPos + 0.01f);
-        gridVertices.push_back(half);
+        gridVertices.push_back(halfz);
         gridVertices.push_back(lineColor.r);
         gridVertices.push_back(lineColor.g);
         gridVertices.push_back(lineColor.b);
@@ -83,7 +86,7 @@ void Ground::initGrid(float size, float yPos, glm::vec4 lineColor) {
     }
 
     // Se vuoi anche le linee parallele all'asse X
-    for (float z = -half; z <= half; z += 1.0f) {
+    for (float z = -3.0; z <= 3.0; z += 1.0f) {
         gridVertices.push_back(-half);
         gridVertices.push_back(yPos + 0.01f);
         gridVertices.push_back(z);

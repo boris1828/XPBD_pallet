@@ -14,6 +14,8 @@ struct Solver {
         Real w2 = edge.obj->inv_masses[edge.v2];
         Real w  = w1 + w2;
 
+        if (w == 0.0) return;
+
         Real alpha = edge.compliance / delta_t / delta_t;
 
         Real C   = distance(x1, x2) - edge.rest_length;
@@ -33,6 +35,8 @@ struct Solver {
         Real w1 = constraint.obj1->inv_masses[constraint.v1];
         Real w2 = constraint.obj2->inv_masses[constraint.v2];
         Real w  = w1 + w2;
+
+        if (w == 0.0) return;
 
         Real alpha  = constraint.compliance / delta_t / delta_t;
         Real length = distance(x1, x2);
@@ -54,15 +58,21 @@ struct Solver {
         if (!constraint.active) return;
 
         Real3 x      = constraint.obj->positions[constraint.v];
+        Real3 old_x  = constraint.obj->old_positions[constraint.v];
         Real3 x_goal = constraint.goal_position;
 
         Real w = constraint.obj->inv_masses[constraint.v];
+
+        if (w == 0.0) return;
 
         Real alpha = constraint.compliance / delta_t / delta_t;
 
         Real C   = distance(x, x_goal);
         Real3 dC = (x-x_goal) / distance(x, x_goal);
-        
+
+        // Real C   = glm::dot(x - old_x, constraint.normal) - constraint.penetration;
+        // Real3 dC = constraint.normal;
+
         Real d_lambda      = (-C - alpha*constraint.lambda) / (w + alpha);
         constraint.lambda += d_lambda;
 
