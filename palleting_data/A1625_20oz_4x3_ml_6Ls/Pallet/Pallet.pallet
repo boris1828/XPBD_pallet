@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PalletClass xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Header>Pallet</Header>
+  <Name>Pallet</Name>
+  <ID>401</ID>
+  <Description>Pallet CHEP</Description>
+  <DimX>1000</DimX>
+  <DimY>1200</DimY>
+  <Dim_Z>162</Dim_Z>
+  <SideRollable>1</SideRollable>
+  <NumberOfUnits>1</NumberOfUnits>
+  <Weight>28000</Weight>
+  <MaxWeight>1500000</MaxWeight>
+  <Checked>true</Checked>
+</PalletClass>

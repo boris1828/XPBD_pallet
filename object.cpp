@@ -4,13 +4,15 @@
 #include <vector>
 #include <set>
 
-#include "types.cpp"
+#include "types.h"
 #include "mesh.cpp"
 #include "AABB.cpp"
-#include "constants.cpp"
+#include "settings.cpp"
 
 extern bool BOX_DRAW_ONLY_EXTERNAL_EDGES;
 extern Real box_edge_compliance;
+extern Real volume_compliance;
+
 
 struct TetraObject {
 
@@ -91,10 +93,10 @@ struct TetraObject {
         // init tetras
         TetraIndex tetra_idx = 0;
         for (Tetrahedron &t : tetras) {
-            vertex_tetras[t.vs[0]].push_back(tetra_idx);
-            vertex_tetras[t.vs[1]].push_back(tetra_idx);
-            vertex_tetras[t.vs[2]].push_back(tetra_idx);
-            vertex_tetras[t.vs[3]].push_back(tetra_idx);
+            // vertex_tetras[t.vs[0]].push_back(tetra_idx);
+            // vertex_tetras[t.vs[1]].push_back(tetra_idx);
+            // vertex_tetras[t.vs[2]].push_back(tetra_idx);
+            // vertex_tetras[t.vs[3]].push_back(tetra_idx);
             t.setObject(this);
             t.rest_volume = tetra_volume(
                                     positions[t.vs[0]], 
@@ -123,12 +125,11 @@ struct TetraObject {
 
             edges.push_back(edge);
 
-            vertex_edges[v1].push_back(edge_idx);
-            vertex_edges[v2].push_back(edge_idx);
+            // vertex_edges[v1].push_back(edge_idx);
+            // vertex_edges[v2].push_back(edge_idx);
             edge_idx++;
         }
-        
-        // create tetra mesh object
+
         mesh = TetraMesh(&positions, tetras, edges);
 
         update_aabb();
@@ -208,6 +209,51 @@ std::array<Real3, 4> get_old_tetra_points(TetraObject* obj, VertexIndex vs[4]) {
             obj->old_positions[vs[2]],
             obj->old_positions[vs[3]]};
 }
+
+TetraObject load_tetrahedral_data(const std::string& filename, Real scale = 2.0) {
+    std::ifstream file(filename);
+    std::vector<Real3> vertices;
+    std::vector<Tetrahedron> tetras;
+    
+    std::string line;
+    std::string section;
+    
+    while (std::getline(file, line)) {
+        if (line.empty() || line[0] == '#') continue;
+        
+        if (line == "VERTICES") {
+            section = "vertices";
+            continue;
+        }
+        else if (line == "TETRAHEDRA") {
+            section = "tetrahedra";
+            continue;
+        }
+        
+        if (section == "vertices") {
+            Real x, y, z;
+            std::istringstream iss(line);
+            iss >> x >> y >> z;
+            vertices.push_back(Real3(scale*x, scale*y+2.0, scale*z));
+        }
+        else if (section == "tetrahedra") {
+            int v0, v1, v2, v3;
+            std::istringstream iss(line);
+            iss >> v0 >> v1 >> v2 >> v3;
+            tetras.push_back({
+                        volume_compliance, nullptr, 
+                        static_cast<VertexIndex>(v0), 
+                        static_cast<VertexIndex>(v1), 
+                        static_cast<VertexIndex>(v2), 
+                        static_cast<VertexIndex>(v3), 0.0});
+        }
+    }
+    
+    TetraObject obj(vertices);
+    obj.init_tetras_and_edges(tetras);
+    return obj;
+}
+
 
 TetraObject create_box(Real3 starting_corner, Real width, Real height, Real depth) {
 
@@ -417,7 +463,6 @@ TetraObject create_ramp(Real3 starting_corner, Real width, Real height, Real dep
     return obj;
 }
 
-
 TetraObject create_tetrahedron(Real3 p1, Real3 p2, Real3 p3, Real3 p4) {
     std::vector<Real3> ps;
     std::vector<Tetrahedron> tetras;
@@ -433,6 +478,98 @@ TetraObject create_tetrahedron(Real3 p1, Real3 p2, Real3 p3, Real3 p4) {
 
     obj.init_tetras_and_edges(tetras);
 
+    return obj;
+}
+
+
+TetraObject create_parallelepiped_grid(Real3 starting_corner, Real width, Real height, Real depth, 
+                                             uint32_t subdivisions_x, uint32_t subdivisions_y, uint32_t subdivisions_z) {
+    
+    std::vector<Real3> vertices;
+    std::vector<Tetrahedron> tetras;
+    
+    // Calcola le dimensioni di ogni cella
+    Real cell_width  = width  / subdivisions_x;
+    Real cell_height = height / subdivisions_y;
+    Real cell_depth  = depth  / subdivisions_z;
+    
+    // Crea la griglia di vertici
+    for (uint32_t z = 0; z <= subdivisions_z; ++z) {
+        for (uint32_t y = 0; y <= subdivisions_y; ++y) {
+            for (uint32_t x = 0; x <= subdivisions_x; ++x) {
+                Real3 vertex = starting_corner + Real3(x * cell_width, y * cell_height, z * cell_depth);
+                vertices.push_back(vertex);
+            }
+        }
+    }
+    
+    // Funzione per ottenere l'indice del vertice nella griglia
+    auto get_vertex_index = [&](uint32_t x, uint32_t y, uint32_t z) -> VertexIndex {
+        return z * (subdivisions_y + 1) * (subdivisions_x + 1) + 
+               y * (subdivisions_x + 1) + 
+               x;
+    };
+    
+    // Crea i cubi e li suddividi in tetraedri
+    for (uint32_t z = 0; z < subdivisions_z; ++z) {
+        for (uint32_t y = 0; y < subdivisions_y; ++y) {
+            for (uint32_t x = 0; x < subdivisions_x; ++x) {
+                // Vertici del cubo corrente
+                VertexIndex v000 = get_vertex_index(x,   y,   z);
+                VertexIndex v100 = get_vertex_index(x+1, y,   z);
+                VertexIndex v010 = get_vertex_index(x,   y+1, z);
+                VertexIndex v110 = get_vertex_index(x+1, y+1, z);
+                VertexIndex v001 = get_vertex_index(x,   y,   z+1);
+                VertexIndex v101 = get_vertex_index(x+1, y,   z+1);
+                VertexIndex v011 = get_vertex_index(x,   y+1, z+1);
+                VertexIndex v111 = get_vertex_index(x+1, y+1, z+1);
+                
+                // Centro del cubo
+                Real3 cube_center = starting_corner + 
+                    Real3((x + 0.5) * cell_width, 
+                          (y + 0.5) * cell_height, 
+                          (z + 0.5) * cell_depth);
+                
+                // Aggiungi solo il centro del cubo come vertice
+                VertexIndex center_index = vertices.size();
+                vertices.push_back(cube_center);
+                
+                // Funzione per creare due tetraedri per una faccia
+                auto add_face_tetras = [&](VertexIndex v0, VertexIndex v1, VertexIndex v2, VertexIndex v3, 
+                                          VertexIndex cube_center) {
+                    // Crea due tetraedri per ogni faccia quadrata
+                    // Tetraedro 1: v0, v1, v2, center
+                    tetras.push_back({volume_compliance, nullptr, v0, v1, v2, cube_center, 0.0});
+                    // Tetraedro 2: v0, v2, v3, center  
+                    tetras.push_back({volume_compliance, nullptr, v0, v2, v3, cube_center, 0.0});
+                };
+                
+                // Crea tetraedri per ogni faccia del cubo
+                
+                // Faccia front (z costante = z): v000, v100, v110, v010
+                add_face_tetras(v000, v100, v110, v010, center_index);
+                
+                // Faccia back (z costante = z+1): v001, v101, v111, v011
+                add_face_tetras(v001, v101, v111, v011, center_index);
+                
+                // Faccia left (x costante = x): v000, v010, v011, v001
+                add_face_tetras(v000, v010, v011, v001, center_index);
+                
+                // Faccia right (x costante = x+1): v100, v110, v111, v101
+                add_face_tetras(v100, v110, v111, v101, center_index);
+                
+                // Faccia bottom (y costante = y): v000, v100, v101, v001
+                add_face_tetras(v000, v100, v101, v001, center_index);
+                
+                // Faccia top (y costante = y+1): v010, v110, v111, v011
+                add_face_tetras(v010, v110, v111, v011, center_index);
+            }
+        }
+    }
+    
+    TetraObject obj(vertices);
+    obj.init_tetras_and_edges(tetras);
+    
     return obj;
 }
 

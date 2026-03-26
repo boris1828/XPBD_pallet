@@ -7,12 +7,13 @@
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 
-#include "types.cpp"
+#include "types.h"
 #include "constraint.cpp"
 
 #include <stdio.h>
 
-Real tetra_volume(Real3 &x1, Real3 &x2, Real3 &x3, Real3 &x4) {
+Real tetra_volume(Real3 &x1, Real3 &x2, Real3 &x3, Real3 &x4) 
+{
     Real3 v1 = x2 - x1;
     Real3 v2 = x3 - x1;
     Real3 v3 = x4 - x1;
@@ -28,7 +29,8 @@ inline Real distance(Real3 &p1, Real3 &p2) {
     return glm::length(p2 - p1);
 }
 
-struct TetraMesh {
+struct TetraMesh 
+{
     std::vector<Real3> normalVertices;
     std::vector<Real3>* vertices;
     GLuint VAO, VBO, EBO;
@@ -176,4 +178,226 @@ struct TetraMesh {
 
 };
 
+struct BoxMesh 
+{
+    std::vector<Real3>* vertices;
+    GLuint VAO, VBO, EBO_edges, EBO_faces;  // Two separate EBOs
+    std::vector<GLuint> edgeIndices;
+    std::vector<GLuint> faceIndices;
 
+    BoxMesh() = default;
+    
+    BoxMesh(std::vector<Real3> *vs) : vertices(vs) 
+    {
+        buildEdgeIndices();
+        buildFaceIndices();
+        
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+        glGenBuffers(1, &EBO_edges);
+        glGenBuffers(1, &EBO_faces);
+        
+        glBindVertexArray(VAO);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Real3) * vertices->size(), 
+                     vertices->data(), GL_DYNAMIC_DRAW);
+        
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(Real3), (void*)0);
+        glEnableVertexAttribArray(0);
+        
+        // Setup edge EBO
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_edges);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * edgeIndices.size(), 
+                     edgeIndices.data(), GL_STATIC_DRAW);
+        
+        glBindVertexArray(0);
+        
+        // Setup face EBO (upload separately)
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_faces);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * faceIndices.size(), 
+                     faceIndices.data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+    
+    void clear() 
+    {
+        if (EBO_faces) glDeleteBuffers(1, &EBO_faces);
+        if (EBO_edges) glDeleteBuffers(1, &EBO_edges);
+        if (VBO)       glDeleteBuffers(1, &VBO);
+        if (VAO)       glDeleteVertexArrays(1, &VAO);
+    }
+    
+    void buildEdgeIndices() 
+    {
+        edgeIndices = {
+            0, 1, 1, 2, 2, 3, 3, 0,
+            4, 5, 5, 6, 6, 7, 7, 4,
+            0, 4, 1, 5, 2, 6, 3, 7
+        };
+    }
+    
+    void buildFaceIndices() 
+    {
+        faceIndices = {
+            0, 1, 2,  2, 3, 0,  // Front
+            4, 7, 6,  6, 5, 4,  // Back
+            0, 3, 7,  7, 4, 0,  // Left
+            1, 5, 6,  6, 2, 1,  // Right
+            3, 2, 6,  6, 7, 3,  // Top
+            0, 4, 5,  5, 1, 0   // Bottom
+        };
+    }
+    
+    void drawSolid() 
+    {
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Real3) * vertices->size(), ertices->data());
+        
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_faces);  
+        glDrawElements(GL_TRIANGLES, faceIndices.size(), GL_UNSIGNED_INT, 0);
+    }
+    
+    void drawWireframe() 
+    {
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Real3) * vertices->size(), vertices->data());
+        
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_edges); 
+        glLineWidth(1.0f);
+        glDrawElements(GL_LINES, edgeIndices.size(), GL_UNSIGNED_INT, 0);
+    }
+};
+
+struct TriangleMesh {
+
+    std::vector<Real3>  *vertices;
+    std::vector<GLuint> triangleIndices;
+    GLuint VAO, VBO, EBO;
+
+    TriangleMesh() = default;
+
+    TriangleMesh(std::vector<Real3> *vs, const std::vector<GLuint>& indices)
+        : vertices(vs), triangleIndices(indices) {
+
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+        glGenBuffers(1, &EBO);
+
+        glBindVertexArray(VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Real3) * vertices->size(), vertices->data(), GL_DYNAMIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(Real3), (void*)0);
+        glEnableVertexAttribArray(0);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * triangleIndices.size(), triangleIndices.data(), GL_DYNAMIC_DRAW);
+
+        glBindVertexArray(0);
+    }
+
+    void drawSolid() {
+        glBindVertexArray(VAO);
+
+        glDrawElements(GL_TRIANGLES, triangleIndices.size(), GL_UNSIGNED_INT, 0);
+    }
+
+    void drawWireframe() {
+        glBindVertexArray(VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Real3) * vertices->size(), vertices->data());
+        
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElements(GL_TRIANGLES, triangleIndices.size(), GL_UNSIGNED_INT, 0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+};
+
+struct ClothMesh {
+    GLuint VAO = 0, VBO = 0, EBO = 0;
+    std::vector<Real3>* vertices = nullptr;
+    std::vector<GLuint> triangleIndices;  // Rinominato per consistenza
+    
+    ClothMesh() = default;
+    
+    ClothMesh(std::vector<Real3>* vs, 
+              const std::vector<GLuint>& inds,
+              const std::vector<ClothEdge>& edges)
+        : vertices(vs), triangleIndices(inds)  // Usa triangleIndices
+    {
+        setupMesh();
+    }
+    
+    void setupMesh() {
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+        glGenBuffers(1, &EBO);
+        
+        glBindVertexArray(VAO);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Real3) * vertices->size(), 
+                     vertices->data(), GL_DYNAMIC_DRAW);
+        
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * triangleIndices.size(),
+                     triangleIndices.data(), GL_DYNAMIC_DRAW);
+        
+        glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(Real3), (void*)0);
+        glEnableVertexAttribArray(0);
+        
+        glBindVertexArray(0);
+    }
+    
+    void drawWireframe() {
+        if (VAO == 0) return;
+        
+        glBindVertexArray(VAO);
+        
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Real3) * vertices->size(), vertices->data());
+        
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        glDrawElements(GL_TRIANGLES, triangleIndices.size(), GL_UNSIGNED_INT, 0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        
+        glBindVertexArray(0);
+    }
+    
+    void drawSolid() {
+        if (VAO == 0) return;
+        
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Real3) * vertices->size(), vertices->data());
+        
+        glDrawElements(GL_TRIANGLES, triangleIndices.size(), GL_UNSIGNED_INT, 0);
+        
+        glBindVertexArray(0);
+    }
+    
+    void drawPoints() {
+        if (VAO == 0) return;
+        
+        glBindVertexArray(VAO);
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Real3) * vertices->size(), vertices->data());
+        
+        glPointSize(5.0f);
+        glDrawArrays(GL_POINTS, 0, vertices->size());
+        glPointSize(1.0f);
+        
+        glBindVertexArray(0);
+    }
+    
+    ~ClothMesh() {
+    //     if (VBO != 0) glDeleteBuffers(1, &VBO);
+    //     if (EBO != 0) glDeleteBuffers(1, &EBO);
+    //     if (VAO != 0) glDeleteVertexArrays(1, &VAO);
+    }
+};

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PalletClass xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Header>Pallet</Header>
+  <Name>Pallet</Name>
+  <ID>401</ID>
+  <Description>Bepensa Pallet</Description>
+  <DimX>914</DimX>
+  <DimY>914</DimY>
+  <Dim_Z>127</Dim_Z>
+  <SideRollable>0</SideRollable>
+  <NumberOfUnits>1</NumberOfUnits>
+  <Weight>25000</Weight>
+  <MaxWeight>2500000</MaxWeight>
+  <Checked>true</Checked>
+</PalletClass>

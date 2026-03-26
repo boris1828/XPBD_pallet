@@ -1,0 +1,12 @@
+# Blender 4.3.2 MTL File: 'slitta.blend'
+# www.blender.org
+
+newmtl STL
+Ka 0.200000 0.200000 0.200000
+Kd 0.000000 0.000000 0.000000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.000000
+d 1.000000
+illum 3
+map_Ns C:/Users/Workstation/Downloads/BlenderSim/BlenderSim/Textures/STL_Texture/Rubber004_2K-JPG_Roughness.jpg

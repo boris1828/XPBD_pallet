@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PrimaryPackagingClass xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Header>Primary Packaging</Header>
+  <Name>Format n3 - Pounch Heninz by nature UK - 6x1</Name>
+  <ID>103</ID>
+  <Description>Format n3 - Pounch Heninz by nature UK - 6x1</Description>
+  <ProductContent>2</ProductContent>
+  <Type>0</Type>
+  <BottomShape>2</BottomShape>
+  <Format>100</Format>
+  <Weight>100</Weight>
+  <RealDiameter>0</RealDiameter>
+  <Length>186</Length>
+  <Width>79</Width>
+  <Height>165</Height>
+  <Speed>3120</Speed>
+  <Checked>true</Checked>
+</PrimaryPackagingClass>

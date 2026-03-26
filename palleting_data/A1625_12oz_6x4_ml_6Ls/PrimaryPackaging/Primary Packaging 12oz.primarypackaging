@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PrimaryPackagingClass xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Header>Primary Packaging</Header>
+  <Name>Primary Packaging 12oz</Name>
+  <ID>103</ID>
+  <Description>12oz</Description>
+  <ProductContent>2</ProductContent>
+  <Type>3</Type>
+  <BottomShape>1</BottomShape>
+  <Format>391</Format>
+  <Weight>391</Weight>
+  <RealDiameter>66</RealDiameter>
+  <Length>66</Length>
+  <Width>66</Width>
+  <Height>164</Height>
+  <Speed>0</Speed>
+  <Checked>true</Checked>
+</PrimaryPackagingClass>

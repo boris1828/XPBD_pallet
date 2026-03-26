@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PalSchemaClass xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Header>Palletizing Schema</Header>
+  <Name>PalSchema 4x2</Name>
+  <ID>502</ID>
+  <Description>pal schema 4x2</Description>
+  <Pallet>Pallet.pallet</Pallet>
+  <FilePath>PalSchema 4x2.palletisingschema</FilePath>
+  <NumberOfLayers>3</NumberOfLayers>
+  <TotalWeight>268000</TotalWeight>
+  <PalletAreaUsed>100</PalletAreaUsed>
+  <LayerPaths>
+    <string>Layer 4x2.layer</string>
+    <string>Layer 2 4x2.layer</string>
+    <string>Layer 4x2.layer</string>
+  </LayerPaths>
+  <InterlayerPaths>
+    <string />
+    <string />
+    <string />
+    <string />
+  </InterlayerPaths>
+  <Type>1</Type>
+  <Overspeed>0</Overspeed>
+  <Speed>0</Speed>
+  <Checked>true</Checked>
+</PalSchemaClass>

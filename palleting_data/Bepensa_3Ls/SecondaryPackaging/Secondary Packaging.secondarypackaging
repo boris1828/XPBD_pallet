@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SecondaryPackagingClass xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Header>SecondaryPackaging</Header>
+  <Name>Secondary Packaging</Name>
+  <ID>201</ID>
+  <PrimaryPackaging>Primary Packaging.primarypackaging</PrimaryPackaging>
+  <Description>2500ml 3(2x1)</Description>
+  <Type>2</Type>
+  <NumberOfItems_X>3</NumberOfItems_X>
+  <NumberOfItems_Y>2</NumberOfItems_Y>
+  <NumberOfItems_Z>1</NumberOfItems_Z>
+  <Weight>15000</Weight>
+  <Length>342</Length>
+  <Width>228</Width>
+  <Height>355</Height>
+  <Overspeed>0</Overspeed>
+  <Speed>0</Speed>
+  <Checked>true</Checked>
+</SecondaryPackagingClass>

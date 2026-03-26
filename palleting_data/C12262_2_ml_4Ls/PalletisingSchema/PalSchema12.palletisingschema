@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PalSchemaClass xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Header>Palletizing Schema</Header>
+  <Name>nuovo</Name>
+  <ID>502</ID>
+  <dbID>-1</dbID>
+  <Description>nuovo</Description>
+  <Pallet>Pallet 90.pallet</Pallet>
+  <NumberOfLayers>4</NumberOfLayers>
+  <TotalWeight>35700</TotalWeight>
+  <PalletAreaUsed>94.28649999999999</PalletAreaUsed>
+  <LotManagementPaths>
+    <string>Lot Management.lotmanagement</string>
+    <string>bbb.lotmanagement</string>
+    <string>Lot Management.lotmanagement</string>
+    <string>bbb.lotmanagement</string>
+    <string>Lot Management.lotmanagement</string>
+  </LotManagementPaths>
+  <LayerPaths>
+    <string>Format n3 6x1 - T1.layer</string>
+    <string>Format n3 6x1 - T2.layer</string>
+    <string>Format n3 6x1 - T1.layer</string>
+    <string>Format n3 6x1 - T2.layer</string>
+  </LayerPaths>
+  <InterlayerPaths>
+    <string />
+    <string />
+    <string />
+    <string />
+    <string />
+    <string />
+  </InterlayerPaths>
+  <Type>1</Type>
+  <Overspeed>0</Overspeed>
+  <Speed>8</Speed>
+  <Checked>true</Checked>
+</PalSchemaClass>

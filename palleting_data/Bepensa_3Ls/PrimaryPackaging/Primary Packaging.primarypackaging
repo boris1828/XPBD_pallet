@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PrimaryPackagingClass xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Header>Primary Packaging</Header>
+  <Name>Primary Packaging</Name>
+  <ID>101</ID>
+  <dbID>0</dbID>
+  <Description>2500ml</Description>
+  <ProductContent>2</ProductContent>
+  <Type>3</Type>
+  <BottomShape>1</BottomShape>
+  <Format>2500</Format>
+  <Weight>2500</Weight>
+  <RealDiameter>114</RealDiameter>
+  <Length>114</Length>
+  <Width>114</Width>
+  <Height>355</Height>
+  <Speed>0</Speed>
+  <Checked>true</Checked>
+</PrimaryPackagingClass>

@@ -4,18 +4,21 @@
 #include <chrono>
 
 #include "object.cpp"
-#include "types.cpp"
+#include "rigid.cpp"
+#include "cloth.cpp"
+#include "types.h"
 
 #include "collision.cpp"
-#include "constants.cpp"
+#include "settings.cpp"
 
 #include <stdio.h>
 
-uint64_t steps_per_second    = 4*60;
-uint64_t iterations_per_step = 10;
-Real delta_t;
+static uint64_t frequency; //25*4*60;
+static uint64_t iterations_per_step = 1;
+static Real delta_t;
 
 extern Real coll_compliance;
+extern Real mu_dynamic;
 
 Real3 gravity(0.0, -9.81, 0.0);
 
@@ -30,8 +33,11 @@ struct Collision {
     Real3 dp_tang;
 };
 
-void XPBD_init() {
-    delta_t = 1.0 / steps_per_second;
+void XPBD_init(uint64_t heartz = 1000, uint64_t iterations = 1) 
+{
+    frequency           = heartz;
+    iterations_per_step = iterations;
+    delta_t             = 1.0 / frequency;
 }
 
 void XPBD_collect_collisions(
@@ -135,22 +141,46 @@ void XPBD_collision_vertex_ripositioning(
     }
 }
 
+struct StatCollector 
+{
+    int edge_collisions = 0;
+    int face_collisions = 0;
+
+    double total_collision_time = 0.0;
+    int steps = 0;
+
+    ~StatCollector() 
+    {
+        std::cout << "\n--- Simulation Statistics ---" << std::endl;
+        std::cout << "Edge Collisions: " << edge_collisions << std::endl;
+        std::cout << "Face Collisions: " << face_collisions << std::endl;
+
+        std::cout << "Average Collision Detection Time per Step: " 
+                  << (steps > 0 ? (total_collision_time / (double)steps) * 1000.0 : 0.0) 
+                  << " ms" << std::endl;
+
+        std::cout << "-----------------------------\n" << std::endl;
+    }
+};
+
+static StatCollector stat_collector;
+
 void XPBD_step(Scene &scene) 
 {
 
+    /*
     for (TetraObject &obj : scene.objects) obj.reset_tetras();
 
     std::vector<Collision> collisions;
-    // auto start = std::chrono::high_resolution_clock::now();
+
     XPBD_collect_collisions(scene.objects, collisions);
-    // auto end      = std::chrono::high_resolution_clock::now();
-    // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    // std::cout << "collect coll. time: " << duration << " ms" << std::endl;
 
     XPBD_collision_vertex_ripositioning(scene.objects, collisions);
 
-    for (TetraObject &obj : scene.objects) {
-        for (VertexIndex vi=0; vi<obj.num_vertices(); vi++) {
+    for (TetraObject &obj : scene.objects) 
+    {
+        for (VertexIndex vi=0; vi<obj.num_vertices(); vi++) 
+        {
             if (obj.inv_masses[vi] == 0.0) continue;
             obj.old_positions[vi]  = obj.positions[vi];
             obj.velocities[vi]    += gravity * delta_t;
@@ -165,10 +195,31 @@ void XPBD_step(Scene &scene)
     }
     for (SpringConstraint &constraint : scene.constraints) constraint.reset();
 
-    for (int it=0; it<iterations_per_step; it++) {
+    for (Cloth &cloth : scene.cloths) {
+        for (VertexIndex vi=0; vi<cloth.positions.size(); vi++) {
+            if (cloth.inv_masses[vi] == 0.0) continue;
+            cloth.old_positions[vi]  = cloth.positions[vi];
+            cloth.velocities[vi]    += gravity * delta_t;
+            cloth.positions[vi]      = cloth.positions[vi] + cloth.velocities[vi] * delta_t;
+        }
 
-        for (TetraObject &obj : scene.objects)
+        for (ClothEdge &edge : cloth.edges) edge.reset();
+    }
+
+    for (int it=0; it<iterations_per_step; it++) 
+    {
+
+        for (TetraObject &obj : scene.objects) 
+        {
             for (Edge &edge : obj.edges)
+                scene.solver.solve(edge, delta_t);
+
+            for (Tetrahedron &tetra : obj.tetras)
+                scene.solver.solve(tetra, delta_t);
+        }
+
+        for (Cloth &cloth : scene.cloths)
+            for (ClothEdge &edge : cloth.edges)
                 scene.solver.solve(edge, delta_t);
 
         for (SpringConstraint &constraint : scene.constraints) 
@@ -187,4 +238,156 @@ void XPBD_step(Scene &scene)
         }
         obj.update_aabb();
     }
+
+    for (Cloth &cloth : scene.cloths) {
+        for (VertexIndex vi=0; vi<cloth.positions.size(); vi++) {
+            if (cloth.inv_masses[vi] == 0.0) continue;
+            if (cloth.positions[vi].y < ground_y) cloth.positions[vi].y = ground_y;
+            cloth.velocities[vi] = (cloth.positions[vi] - cloth.old_positions[vi]) / delta_t;
+        }
+    }
+
+    */
+
+    // Rigid Objects
+    std::vector<RigidCollisionConstraint> rigid_collisions;
+    rigid_collisions.reserve(scene.rigid_objects.size() * scene.rigid_objects.size() / 2);
+
+    for (int ri1=0; ri1<scene.rigid_objects.size(); ri1++) 
+    {
+        for (int ri2=ri1+1; ri2<scene.rigid_objects.size(); ri2++) 
+        {
+            RigidBox &b1 = scene.getRigidObject(ri1);
+            RigidBox &b2 = scene.getRigidObject(ri2);
+
+            if (!b1.aabb.intersects(b2.aabb)) continue;
+
+            RigidCollisionInfo info = SAT_box_box(b1, b2);
+
+            if (!info.intersecting)           continue;
+            if (b1.is_static && b2.is_static) continue;
+
+            if (info.owner == 0) 
+            {
+                assert(info.manifold_size == 2);
+                
+                RigidCollisionConstraint constraint(
+                    coll_compliance, 
+                    &b1, 
+                    &b2, 
+                    info.manifold[0], 
+                    info.manifold[1], 
+                    info.penetration, 
+                    info.axis);
+                
+                rigid_collisions.push_back(constraint);
+
+                stat_collector.edge_collisions++;
+
+                continue;
+            }
+
+            stat_collector.face_collisions++;
+
+            for (int pi=0; pi<info.manifold_size; pi++) 
+            {
+
+                RigidCollisionConstraint constraint(
+                    coll_compliance, 
+                    &b1, 
+                    &b2, 
+                    info.manifold[pi], 
+                    info.manifold[pi], 
+                    info.penetration, // / (Real) info.manifold_size, 
+                    info.axis);
+
+                rigid_collisions.push_back(constraint);
+            }
+        }
+    }
+
+    for (RigidBox &obj : scene.rigid_objects) 
+    {
+        obj.update(delta_t, gravity);
+    }
+
+    for (FixedRigidSpringConstraint &constraint : scene.fixed_rigid_constraints) 
+        constraint.reset();
+
+    for (RigidSpringConstraint &constraint : scene.rigid_constraints) 
+        constraint.reset();
+
+    for (RigidCollisionConstraint &constraint : rigid_collisions) 
+        constraint.reset();
+
+    // constraints
+
+    for (int it=0; it<iterations_per_step; it++) 
+    {
+        for (FixedRigidSpringConstraint &constraint : scene.fixed_rigid_constraints) 
+            scene.solver.solve(constraint, delta_t);
+
+        for (RigidSpringConstraint &constraint : scene.rigid_constraints) 
+            scene.solver.solve(constraint, delta_t);
+
+        for (RigidCollisionConstraint &constraint : rigid_collisions) 
+            scene.solver.solve(constraint, delta_t);
+    }
+
+    for (RigidBox &obj : scene.rigid_objects) 
+    {
+        obj.update_velocities(delta_t);
+    }
+
+    // velocity solve for dynmaic collision
+    for (RigidCollisionConstraint &constraint : rigid_collisions) 
+    {
+        RigidBox *b1 = constraint.b1;
+        RigidBox *b2 = constraint.b2;
+
+        Real3 p1 = constraint.p1;
+        Real3 p2 = constraint.p2;
+
+        Real3 r1 = world_to_body(p1, b1->position, b1->orientation);
+        Real3 r2 = world_to_body(p2, b2->position, b2->orientation);
+
+        Real3 nw = constraint.n;
+
+        Real3 v1 = b1->velocity + glm::cross(b1->angular_velocity, p1 - b1->position);
+        Real3 v2 = b2->velocity + glm::cross(b2->angular_velocity, p2 - b2->position);
+
+        Real3 v = v1 - v2;
+        Real vn = glm::dot(v, nw);
+
+        Real3 vt = v - (vn * nw);
+
+        Real fn = std::abs(glm::abs(constraint.lambda) / delta_t);
+
+        if (glm::length(vt) < 1e-6) continue;
+
+        Real3 dv = - glm::normalize(vt) * glm::min(mu_dynamic * fn, glm::length(vt));
+
+        Real w1 = b1->generalized_inverse_mass(r1, world_to_body(nw, Real3(0.0), b1->orientation));
+        Real w2 = b2->generalized_inverse_mass(r2, world_to_body(nw, Real3(0.0), b2->orientation));
+
+        Real3 pw = dv / (w1 + w2);
+
+        auto applyVelocityCorrection = [&](RigidBox* body, const Real3& pw, const Real3& r, Real sign) 
+        {
+            Real3 pb     = world_to_body(pw, Real3(0.0), body->orientation);
+            Real3 tau    = glm::cross(r, pb);
+            Real3 domega = body->inv_inertia_tensor * tau;
+            
+            domega = quat_to_rotmat(body->orientation) * domega;
+
+            body->velocity         += sign * pw / body->mass;
+            body->angular_velocity += sign * domega;
+        };
+
+        if (!b1->is_static) applyVelocityCorrection(b1, pw, r1, 1.0);
+
+        if (!b2->is_static) applyVelocityCorrection(b2, pw, r2, -1.0);
+    }
+
+
 }

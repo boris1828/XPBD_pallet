@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PalletClass xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Header>Pallet</Header>
+  <Name>Pallet</Name>
+  <ID>401</ID>
+  <dbID>0</dbID>
+  <Description>Pallet EUROCorretta</Description>
+  <DimX>1200</DimX>
+  <DimY>800</DimY>
+  <Dim_Z>144</Dim_Z>
+  <SideRollable>1</SideRollable>
+  <NumberOfUnits>1</NumberOfUnits>
+  <Weight>25000</Weight>
+  <MaxWeight>1500000</MaxWeight>
+  <Checked>true</Checked>
+</PalletClass>

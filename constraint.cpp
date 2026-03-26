@@ -3,14 +3,16 @@
 #include <array>
 #include <algorithm>
 
-#include "types.cpp"
+#include "types.h"
 #include "AABB.cpp"
 
+
+struct RigidBox;
 struct TetraObject;
+struct Cloth;
 
 std::array<Real3, 4> get_tetra_points(TetraObject* obj, VertexIndex vs[4]);
 std::array<Real3, 4> get_old_tetra_points(TetraObject* obj, VertexIndex vs[4]);
-
 
 struct Constraint {
     Real compliance;
@@ -24,6 +26,26 @@ struct Constraint {
 };
 
 // ##############################################
+
+struct ClothEdge : Constraint {
+    Cloth *cloth;
+    VertexIndex v1, v2; 
+    Real rest_length;
+
+    ClothEdge(
+        Real compliance, 
+        Cloth *cloth,
+        VertexIndex v1, 
+        VertexIndex v2, 
+        Real length) 
+        : Constraint(compliance), 
+          cloth(cloth), 
+          rest_length(length),  
+          v1(v1), v2(v2)
+        {}
+
+    void setObject(Cloth* o) { cloth = o; }
+};
 
 struct InternalConstraint : Constraint {
     TetraObject *obj;
@@ -127,8 +149,7 @@ struct Edge : InternalConstraint {
         Real length)
         : InternalConstraint(compliance, obj),
           rest_length(length),  
-          v1(v1), 
-          v2(v2) {}
+          v1(v1), v2(v2) {}
 };
 
 struct CollisionConstraint : InternalConstraint{
@@ -178,4 +199,70 @@ struct SpringConstraint : GlobalConstraint{
           rest_length(length) {}
 };
 
+struct FixedRigidSpringConstraint : GlobalConstraint {
+
+    RigidBox *box;
+    Real3     body_attach;
+    Real3     world_attach;
+    Real      rest_length;
+
+    FixedRigidSpringConstraint(
+        Real compliance,
+        RigidBox *box,
+        Real3     body_attach,
+        Real3     world_attach,
+        Real      length)
+        : GlobalConstraint(compliance),
+          box(box),
+          body_attach(body_attach),
+          world_attach(world_attach),
+          rest_length(length) {}
+};
+
+struct RigidSpringConstraint : GlobalConstraint {
+
+    RigidBox *b1, *b2;
+    Real3     r1, r2;
+    Real      rest_length;
+    bool active = true;
+
+    RigidSpringConstraint(
+        Real compliance,
+        RigidBox *b1,
+        RigidBox *b2,
+        Real3     r1,
+        Real3     r2,
+        Real      length)
+        : GlobalConstraint(compliance),
+          b1(b1),
+          b2(b2),
+          r1(r1),
+          r2(r2),
+          rest_length(length) {}
+};
+
+struct RigidCollisionConstraint : GlobalConstraint {
+
+    RigidBox *b1, *b2;
+    Real3     p1, p2;
+    Real3     r1, r2;
+    Real      d;
+    Real3     n;
+
+    RigidCollisionConstraint(
+        Real compliance,
+        RigidBox *b1,
+        RigidBox *b2,
+        Real3     p1,
+        Real3     p2,
+        Real      penetration,
+        Real3     normal)
+        : GlobalConstraint(compliance),
+          b1(b1),
+          b2(b2),
+          p1(p1),
+          p2(p2),
+          d(penetration),
+          n(normal) {}
+};
 
