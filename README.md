@@ -61,43 +61,7 @@ cmake --build . --config Release
 
 la parte `C:/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake` è un segnaposto. Ogni utente deve sostituirlo con il percorso reale della propria installazione di vcpkg sul proprio PC.
 
-## ✅ Esecuzione del progetto con il Launcher
+## ✅ Esecuzione del progetto
 
-L'intero processo (configurazione, build, simulazione e generazione video) è gestito dal launcher in Python. Requisiti
-
-- **Python 3**.
-- Libreria **OpenCV**:    `pip install opencv-python`
-
-Dal root del progetto, esegui:
-
-```bash
-python launcher.py [OPZIONI]
-```
-
-Opzioni disponibili:
-
-- `--novideo` → Disabilita la generazione del video.
-
-## ✅ Esecuzione del progetto senza Launcher
-
-alterntivamente, dopo aver completato la build, l'eseguibile del progetto si trova nella cartella: `build/Release`  (o `build/Debug` se hai compilato in modalità Debug).
+dopo aver completato la build, l'eseguibile del progetto si trova nella cartella: `build/Release`  (o `build/Debug` se hai compilato in modalità Debug).
 Per avviare la simulazione, basta lanciare l'eseguibile
-
-## ✅ Generazione manuale del video
-
-Per registrare un video della simulazione:
-
-1. Assicurati di avere **FFmpeg** installato sul tuo sistema e accessibile dal PATH.Puoi scaricarlo da: [https://ffmpeg.org/download.html](https://ffmpeg.org/download.html)
-2. Nel codice sorgente, abilita la registrazione del video impostando la variabile:
-
-   ```cpp
-   bool DO_VIDEO = true;
-   ```
-   e poi compila il progetto.
-3. Esegui la simulazione; i frame verranno salvati nella cartella `video_frame` come immagini:
-   frame_00001.ppm, frame_00002.ppm, ecc.
-4. Per creare il video finale, apri un terminale nella cartella `video_frame` e lancia il comando:
-
-   ```bash
-   ffmpeg -framerate 24 -i frame_%05d.ppm -vf "vflip" -c:v libx264 -pix_fmt yuv420p output.mp4
-   ```
