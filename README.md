@@ -41,6 +41,18 @@ When the program starts it opens the simulation setup screen. Configure everythi
 
 ## Examples
 
+### Standard runs
+
+Transport simulations with different wrapping configurations (film intact).
+
+<table>
+<tr>
+<td><img src="docs/ex1.gif" width="100%"></td>
+<td><img src="docs/ex2.gif" width="100%"></td>
+<td><img src="docs/ex3.gif" width="100%"></td>
+</tr>
+</table>
+
 ### Tearing
 
 <table>
