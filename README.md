@@ -43,8 +43,6 @@ When the program starts it opens the simulation setup screen. Configure everythi
 
 ### Standard runs
 
-Transport simulations with different wrapping configurations (film intact).
-
 <table>
 <tr>
 <td><img src="docs/ex1.gif" width="100%"></td>
