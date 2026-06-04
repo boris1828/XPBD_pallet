@@ -41,10 +41,6 @@ When the program starts it opens the simulation setup screen. Configure everythi
 
 ### Tearing
 
-The stretch film is modelled as breakable spring constraints: once a constraint stretches beyond the
-configured limit it tears, and the load is free to shift. Below, two transport simulations with film
-tearing enabled.
-
 <table>
 <tr>
 <td><img src="docs/tear1.gif" width="100%"></td>
