@@ -37,6 +37,21 @@ When the program starts it opens the simulation setup screen. Configure everythi
 | **Camera Setup** | Camera offsets and optional look-at on the stack center |
 | **Data Collection** | Record displacement, tilt angle, forces, energy and CoM drift, exported as Python lists |
 
+## Examples
+
+### Tearing
+
+The stretch film is modelled as breakable spring constraints: once a constraint stretches beyond the
+configured limit it tears, and the load is free to shift. Below, two transport simulations with film
+tearing enabled.
+
+<table>
+<tr>
+<td><img src="docs/tear1.gif" width="100%"></td>
+<td><img src="docs/tear2.gif" width="100%"></td>
+</tr>
+</table>
+
 ## Build (Windows)
 
 **Prerequisites:** CMake ≥ 3.15, Visual Studio (or a compatible C++ compiler),
