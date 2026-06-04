@@ -8,6 +8,8 @@ wraps it with stretch film modelled as spring constraints, and subjects it to a 
 Typical use: comparing wrapping patterns and film stiffness, and exporting displacement / tilt / force /
 energy data for analysis.
 
+![Pipeline overview](docs/pipeline.png)
+
 ## How it works
 
 - **Boxes** → each secondary package is a rigid body (`RigidBox`) reconstructed from the schema's XML files.
