@@ -253,7 +253,7 @@ struct BoxMesh
     {
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Real3) * vertices->size(), ertices->data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Real3) * vertices->size(), vertices->data());
         
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_faces);  
         glDrawElements(GL_TRIANGLES, faceIndices.size(), GL_UNSIGNED_INT, 0);
